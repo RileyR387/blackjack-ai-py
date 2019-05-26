@@ -20,13 +20,19 @@ class Hand:
 
     def addCard(self, card):
         self.cards.append( card )
-        self.cards.sort()
 
     def hasBusted(self):
         if self.value() > 21:
             return True
         else:
             return False
+
+    def dealerHand(self):
+        return "%-32s %4s " % (
+                    self.cards[0] + " XXX",
+                    '(??)'
+                )
+
 
 
     def value(self):

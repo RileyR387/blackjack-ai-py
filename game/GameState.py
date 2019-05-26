@@ -6,6 +6,7 @@ import pprint
 from . import Card
 from .hand import Hand
 from .Dealer import Dealer
+from .color import color
 
 class GameState:
     def __init__(self, deckCount, players):
@@ -62,6 +63,7 @@ class GameState:
                     self.status = "SCORE"
                 else:
                     player['hand'].addCard( card )
+                    #if not player['hand'].hasBusted():
                     self._currPlayerIndex -= 1
                     return
 
@@ -73,25 +75,25 @@ class GameState:
                 return;
             elif action in ['HIT','SPLIT']:
                 player['hand'].addCard( card )
-                self._currPlayerIndex -= 1
+                if not player['hand'].hasBusted() and player['hand'].value() != 21:
+                    self._currPlayerIndex -= 1
                 return;
             elif action not in ['STAND','HIT','DOUBLE','SPLIT']:
-                #self.kickPlayer(player['name'], action)
                 if player['hand'].value() >= 17:
                     self.consumeCard( card )
                     return
                 else:
                     player['hand'].addCard( card )
-                    self._currPlayerIndex -= 1
+                    if not player['hand'].hasBusted():
+                        self._currPlayerIndex -= 1
                     return
 
         if self.status == "SCORE":
             self.printGameTable()
-            print("STATE CHANGE -> RESET")
             self.status = "RESET"
 
         if self.status == "RESET":
-            print("Reseting Table")
+            print("\nReseting Table")
             for player in self.seats:
                 player['hand'] = Hand()
             print("STATE CHANGE -> DEALING_HANDS")
@@ -132,10 +134,13 @@ class GameState:
                 elif( seat['hand'].value() < 22 and seat['hand'].value() < dealer.value() ):
                     score = 'LOSER'
 
-                game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'winner': score } )
+                game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'score': score } )
         else:
             for seat in self.seats:
-                game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'winner': ''} )
+                if seat['name'] in ['dealer','Dealer']:
+                    game.append( { 'name': seat['name'], 'hand': seat['hand'].dealerHand(), 'handVal': '?', 'score': ''} )
+                else:
+                    game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'score': ''} )
 
         return game;
 
@@ -151,7 +156,11 @@ class GameState:
         return self.seats[-1]['hand']
 
     def printGameTable(self):
-        gameString = """Name: {name:32s} Hand: {hand}{winner}"""
+        gameStringDealer = "Name: {name:32s} Hand: " + color.PURPLE + "{hand}" + color.END + "{score}"
+        gameString = "Name: {name:32s} Hand: {hand}{score}"
         for seat in self.gameState():
-            print( gameString.format_map( seat ) )
+            if seat['name'] in ['dealer','Dealer']:
+                print( gameStringDealer.format_map( seat ) )
+            else:
+                print( gameString.format_map( seat ) )
 
