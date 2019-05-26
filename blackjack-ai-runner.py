@@ -26,7 +26,7 @@ table_seats = {
         for finder, name, ispkg in iter_namespace(player.players)
 }
 
-shoe = Game.Game( game_opts, table_seats )
+game = Game.Game( game_opts, table_seats )
 
-shoe.run()
+game.play()
 
