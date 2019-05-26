@@ -1,0 +1,4 @@
+
+class ShuffleShoeException(Exception):
+  pass
+

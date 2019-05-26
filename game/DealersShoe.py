@@ -2,7 +2,8 @@
 import random
 import pprint
 
-from . import deck
+from .deck import Deck
+from . import ShuffleShoeException
 
 class DealersShoe:
     def __init__(self, deckCount):
@@ -10,7 +11,7 @@ class DealersShoe:
         self.shoe = []
         self.decks = deckCount
         for x in range(0, self.decks):
-            self.shoe.extend( deck.cards() )
+            self.shoe.extend( Deck.cards() )
         self.shuffle()
 
     def dumpShoe(self):
