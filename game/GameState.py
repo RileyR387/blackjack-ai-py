@@ -6,6 +6,8 @@ from . import Card
 from .hand import Hand
 from .Dealer import Dealer
 
+gamesStates = ['dealing','awaitingPlayer']
+
 class GameState:
     def __init__(self, deckCount, players):
         self.seats = []
@@ -34,11 +36,11 @@ class GameState:
         print( "Delt player: %s a %s with value %d" % (player['name'], card, Card.value(card)))
 
     def nextPlayer(self):
-        if self.currPlayerIndex+1 >= len(self.seats):
+        self.currPlayerIndex += 1
+        if self.currPlayerIndex >= len(self.seats):
             self.currPlayerIndex = 0
             return self.seats[0]
         else:
-            self.currPlayerIndex += 1
             return self.seats[self.currPlayerIndex]
 
     def printGameTable(self):

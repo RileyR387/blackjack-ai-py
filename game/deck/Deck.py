@@ -1,18 +1,23 @@
 
+
 def cards():
+    spade= u"\u2660"
+    heart= u"\u2665"
+    diamond= u"\u2666"
+    club= u"\u2663"
     return [
-          ' A' + u"\u2663", ' A' + u"\u2660", ' A' + u"\u2665", ' A' + u"\u2666",
-          ' 2' + u"\u2663", ' 2' + u"\u2660", ' 2' + u"\u2665", ' 2' + u"\u2666",
-          ' 3' + u"\u2663", ' 3' + u"\u2660", ' 3' + u"\u2665", ' 3' + u"\u2666",
-          ' 4' + u"\u2663", ' 4' + u"\u2660", ' 4' + u"\u2665", ' 4' + u"\u2666",
-          ' 5' + u"\u2663", ' 5' + u"\u2660", ' 5' + u"\u2665", ' 5' + u"\u2666",
-          ' 6' + u"\u2663", ' 6' + u"\u2660", ' 6' + u"\u2665", ' 6' + u"\u2666",
-          ' 7' + u"\u2663", ' 7' + u"\u2660", ' 7' + u"\u2665", ' 7' + u"\u2666",
-          ' 8' + u"\u2663", ' 8' + u"\u2660", ' 8' + u"\u2665", ' 8' + u"\u2666",
-          ' 9' + u"\u2663", ' 9' + u"\u2660", ' 9' + u"\u2665", ' 9' + u"\u2666",
-          '10' + u"\u2663", '10' + u"\u2660", '10' + u"\u2665", '10' + u"\u2666",
-          ' J' + u"\u2663", ' J' + u"\u2660", ' J' + u"\u2665", ' J' + u"\u2666",
-          ' Q' + u"\u2663", ' Q' + u"\u2660", ' Q' + u"\u2665", ' Q' + u"\u2666",
-          ' K' + u"\u2663", ' K' + u"\u2660", ' K' + u"\u2665", ' K' + u"\u2666",
+          ' A' + spade, ' A' + heart, ' A' + diamond, ' A' + club,
+          ' 2' + spade, ' 2' + heart, ' 2' + diamond, ' 2' + club,
+          ' 3' + spade, ' 3' + heart, ' 3' + diamond, ' 3' + club,
+          ' 4' + spade, ' 4' + heart, ' 4' + diamond, ' 4' + club,
+          ' 5' + spade, ' 5' + heart, ' 5' + diamond, ' 5' + club,
+          ' 6' + spade, ' 6' + heart, ' 6' + diamond, ' 6' + club,
+          ' 7' + spade, ' 7' + heart, ' 7' + diamond, ' 7' + club,
+          ' 8' + spade, ' 8' + heart, ' 8' + diamond, ' 8' + club,
+          ' 9' + spade, ' 9' + heart, ' 9' + diamond, ' 9' + club,
+          '10' + spade, '10' + heart, '10' + diamond, '10' + club,
+          ' J' + spade, ' J' + heart, ' J' + diamond, ' J' + club,
+          ' Q' + spade, ' Q' + heart, ' Q' + diamond, ' Q' + club,
+          ' K' + spade, ' K' + heart, ' K' + diamond, ' K' + club,
         ]
 
