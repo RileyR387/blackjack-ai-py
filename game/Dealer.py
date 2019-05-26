@@ -6,3 +6,9 @@ class Dealer:
         self.hand = Hand()
         pass
 
+    def nextAction(self, state):
+        #print( state )
+        pass
+
+    def name(self):
+        return "TheDealer"

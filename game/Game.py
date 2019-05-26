@@ -25,17 +25,18 @@ class Game:
         for player in self.players.keys():
             self.players[player].init( self.gameState )
 
-        try:
-            while True:
-
+        while self.gameState.status != "GAMEOVER":
+            try:
+                card = self.shoe.nextCard()
+            except ShuffleShoeException as e:
+                self.gameState.newShoeFlag = True
                 card = self.shoe.nextCard()
 
-                self.gameState.consumeCard( card )
+            self.gameState.consumeCard( card )
 
-                for player in self.players.keys():
-                    self.players[player].nextAction( self.gameState )
+            if self.gameState.status != "DEALING_HANDS":
+                self.gameState.printGameTable()
 
-        except ShuffleShoeException as e:
-            print( "Shoe Empty! %s" % str(e) );
-
+            #for player in self.players.keys():
+            #    self.players[player].nextAction( self.gameState )
 

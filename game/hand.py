@@ -5,12 +5,18 @@ class Hand:
     def __init__(self):
         self.cards = []
 
+    def __str__(self):
+        BUSTED = ""
+        if self.value() > 21:
+            BUSTED = " BUSTED"
+        return '(' + str(self.value()) + ')' + ' '.join(self.cards) + BUSTED
+
+    def __int__(self):
+        return self.value()
+
     def addCard(self, card):
         self.cards.append( card )
         self.cards.sort()
-
-    def __str__(self):
-        print( ''.join(self.cards))
 
     def value(self):
         x = 0
@@ -32,6 +38,7 @@ class Hand:
                 --aceCount
             else:
                 x += 11
+                --aceCount
 
         return x
 

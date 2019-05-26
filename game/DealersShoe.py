@@ -10,6 +10,7 @@ class DealersShoe:
         print("Creating dealers shoe with %s decks" % deckCount)
         self.shoe = []
         self.decks = deckCount
+        self.sentShuffleNotice = False
         for x in range(0, self.decks):
             self.shoe.extend( Deck.cards() )
         self.shuffle()
@@ -22,8 +23,9 @@ class DealersShoe:
         random.shuffle( self.shoe )
 
     def nextCard(self):
-        if len(self.shoe) > (.2*self.decks*52):
+        if len(self.shoe) > (.2*self.decks*52) or self.sentShuffleNotice:
             return self.shoe.pop()
         else:
+            self.sentShuffleNotice = True
             raise ShuffleShoeException("It's time to shuffle!")
 
