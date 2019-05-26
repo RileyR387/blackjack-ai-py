@@ -44,6 +44,7 @@ class GameState:
 
             # Player one have enough cards?
             if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
+                self.printGameTable()
                 self.status = "DELT"
                 print("STATE CHANGE -> DELT")
             else:
@@ -52,12 +53,12 @@ class GameState:
                 return
 
         if self.status == "DELT":
-            action = player['agent'].nextAction( self.gameStateJson() )
+            action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
 
             if player['name'] == 'dealer':
-
-                if player['hand'].value() >= 17:
+                if player['hand'].value() >= 17 or not self.playersRemain():
                     self._currPlayerIndex = -1
+                    print("STATE CHANGE -> SCORE")
                     self.status = "SCORE"
                 else:
                     player['hand'].addCard( card )
@@ -85,14 +86,17 @@ class GameState:
                     return
 
         if self.status == "SCORE":
-            print("Scoring Game")
+            self.printGameTable()
+            print("STATE CHANGE -> RESET")
             self.status = "RESET"
 
         if self.status == "RESET":
             print("Reseting Table")
             for player in self.seats:
                 player['hand'] = Hand()
+            print("STATE CHANGE -> DEALING_HANDS")
             self.status = "DEALING_HANDS"
+            self._currPlayerIndex = -1
             self.consumeCard( card )
 
     def kickPlayer(self, playerName, action):
@@ -110,15 +114,44 @@ class GameState:
 
     def gameState(self):
         game = []
-        for row in self.seats:
-            game.append( { 'name': row['name'], 'hand': str(row['hand']), 'handVal': int(row['hand']), } )
+        if self.status == "SCORE":
+            dealer = self.getDealerHand()
+            for seat in self.seats:
+                if( seat['hand'].value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(seat['hand'].cards) == 2):
+                    score = '*!BlackJack!*'
+                elif seat['name'] == 'dealer':
+                    score = ''
+                elif( seat['hand'].value() > 21):
+                    score = ''
+                elif( dealer.value() > 21 and seat['hand'].value() < 22):
+                    score = 'Winner!'
+                elif( seat['hand'].value() < 22 and seat['hand'].value() > dealer.value() ):
+                    score = 'Winner!'
+                elif( seat['hand'].value() < 22 and seat['hand'].value() == dealer.value() ):
+                    score = 'push'
+                elif( seat['hand'].value() < 22 and seat['hand'].value() < dealer.value() ):
+                    score = 'LOSER'
+
+                game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'winner': score } )
+        else:
+            for seat in self.seats:
+                game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'winner': ''} )
+
         return game;
+
+    def playersRemain(self):
+        for seat in self.seats:
+            if seat['name'] != 'DEALER' and not seat['hand'].hasBusted():
+                return True
 
     def gameStateJson(self):
         return json.dumps(self.gameState())
 
+    def getDealerHand(self):
+        return self.seats[-1]['hand']
+
     def printGameTable(self):
-        gameString = """Name: {name:32s} Hand: {hand}({handVal})"""
+        gameString = """Name: {name:32s} Hand: {hand}{winner}"""
         for seat in self.gameState():
             print( gameString.format_map( seat ) )
 

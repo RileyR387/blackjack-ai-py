@@ -8,8 +8,12 @@ class Hand:
     def __str__(self):
         BUSTED = ""
         if self.value() > 21:
-            BUSTED = " BUSTED"
-        return '(' + str(self.value()) + ')' + ' '.join(self.cards) + BUSTED
+            BUSTED = "BUSTED"
+        return "%-32s %4s %s" % (
+                    ' '.join(self.cards),
+                    '('+str(self.value())+')',
+                    BUSTED
+                )
 
     def __int__(self):
         return self.value()
@@ -18,6 +22,13 @@ class Hand:
         self.cards.append( card )
         self.cards.sort()
 
+    def hasBusted(self):
+        if self.value() > 21:
+            return True
+        else:
+            return False
+
+
     def value(self):
         x = 0
         aceCount = 0
@@ -25,20 +36,20 @@ class Hand:
             cVal = Card.value( card );
             if cVal == 11:
                 cVal = 0
-                ++aceCount
+                aceCount += 1
 
             x += cVal
 
         while( aceCount > 0 ):
             if x == 10 and aceCount == 1:
                 x += 11
-                --aceCount
+                aceCount -= 1
             elif x > 10-aceCount:
                 x += 1
-                --aceCount
+                aceCount -= 1
             else:
                 x += 11
-                --aceCount
+                aceCount -= 1
 
         return x
 

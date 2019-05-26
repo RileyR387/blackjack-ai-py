@@ -6,7 +6,7 @@ class Dealer:
         self.hand = Hand()
         pass
 
-    def nextAction(self, state):
+    def nextAction(self, state, myHand):
         #print( state )
         pass
 
