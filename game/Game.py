@@ -1,13 +1,16 @@
 
 from . import DealersShoe, GameState
+from .exception import ShuffleShoeException
 
 class Game:
-    def __init__(self, opts, seats ):
+    def __init__(self, opts, players ):
         print( "Game initializing" )
         self.opts = opts
-        self.seats = seats
-        self.gameState = GameState.GameState( opts['decks'], seats )
-        self.shoe = DealersShoe.DealersShoe(opts['decks'])
+        self.players = players
+
+        self.gameState = GameState.GameState( opts['decks'], players )
+        self.shoe  =  DealersShoe.DealersShoe(opts['decks'])
+
         self.house = {
             'bankroll': 10^6,
             'minbet': 5,
@@ -19,17 +22,20 @@ class Game:
 
         self.shoe.dumpShoe()
 
-        for seat in self.seats.keys():
-            self.seats[seat].init( self.gameState )
+        for player in self.players.keys():
+            self.players[player].init( self.gameState )
 
         try:
             while True:
-                card = self.shoe.nextCard()
-                self.gameState.consumeCard( card )
-                for seat in self.seats.keys():
-                    self.seats[seat].nextAction( self.gameState )
 
-        except Exception as e:
+                card = self.shoe.nextCard()
+
+                self.gameState.consumeCard( card )
+
+                for player in self.players.keys():
+                    self.players[player].nextAction( self.gameState )
+
+        except ShuffleShoeException as e:
             print( "Shoe Empty! %s" % str(e) );
 
 

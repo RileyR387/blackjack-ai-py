@@ -3,7 +3,7 @@ import random
 import pprint
 
 from .deck import Deck
-from . import ShuffleShoeException
+from .exception import ShuffleShoeException
 
 class DealersShoe:
     def __init__(self, deckCount):
@@ -25,5 +25,5 @@ class DealersShoe:
         if len(self.shoe) > (.2*self.decks*52):
             return self.shoe.pop()
         else:
-            raise ShuffleShoeException
+            raise ShuffleShoeException("It's time to shuffle!")
 
