@@ -12,6 +12,7 @@ class GameState:
         self.currPlayerIndex = 0;
 
         for player in players.keys():
+            print( "Loaded %s" % player )
             self.seats.append({
                 'name': player,
                 'hand': Hand(),
@@ -28,18 +29,17 @@ class GameState:
         print("Creating initial game state for %s players" % len(self.seats))
 
     def consumeCard(self, card):
-
-        for seat in self.seats:
-            seat['hand'].addCard( card )
-
-        print( "Delt %s with value %d" % (card, Card.value(card)))
+        player = self.nextPlayer()
+        player['hand'].addCard( card )
+        print( "Delt player: %s a %s with value %d" % (player['name'], card, Card.value(card)))
 
     def nextPlayer(self):
-        if self.currPlayerIndex >= len(self.seats):
+        if self.currPlayerIndex+1 >= len(self.seats):
             self.currPlayerIndex = 0
             return self.seats[0]
         else:
-            return self.seats[++self.currPlayerIndex]
+            self.currPlayerIndex += 1
+            return self.seats[self.currPlayerIndex]
 
     def printGameTable(self):
         pass
