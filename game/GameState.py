@@ -9,9 +9,10 @@ from .Dealer import Dealer
 from .color import color
 
 class GameState:
-    def __init__(self, deckCount, players):
+    def __init__(self, deckCount, insurance, players):
         self.seats = []
         self._currPlayerIndex = -1
+        self._enableInsurance = insurance
         self.newShoeFlag = False
 
         for player in players.keys():
@@ -20,6 +21,7 @@ class GameState:
                 'name': player,
                 'hand': Hand(),
                 'agent': players[player],
+                'handsPlayed': 0,
                 'stats': {
                    'bjs': 0,
                    'wins': 0,
@@ -37,6 +39,7 @@ class GameState:
             'name': 'dealer',
             'hand': Hand(),
             'agent': Dealer(),
+            'handsPlayed': 0,
                 'stats': {
                    'bjs': 0,
                    'wins': 0,
@@ -49,49 +52,65 @@ class GameState:
 
     def consumeCard(self, card):
         player = self.nextPlayer()
-        if self.status == "DEALING_HANDS":
-            # Shoe empty and fresh round?
-            if( (self._currPlayerIndex == 0 and self.newShoeFlag)
-             or len(self.seats) <= 1 ):
-                self.status = "GAMEOVER"
-                print("Game over!")
-                return
 
-            # Player one have enough cards?
-            if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
-                self.printGameTable()
-                self.status = "DELT"
-                print("STATE CHANGE -> DELT")
+        if self.status == "DEALING_HANDS":
+            if self._dealHand( player, card ) is not None:
+                self.status = 'DELT'
             else:
-                player['hand'].addCard( card )
-                #print( "Delt player: %s a %s with value %d" % (player['name'], card, Card.value(card)))
                 return
 
         if self.status == "DELT":
-            action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
+
+            action = None
+
+            if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
+                dealerHand = self.getDealerHand()
+                if dealerHand.offerInsurance() and self._enableInsurance:
+                    print("Offering Insurance...")
+                    for seat in self.seats:
+                        try:
+                            if seat['agent'].takeInsurance( self.gameStateJson(), player['hand'] ):
+                                #TODO: account for insurance
+                                pass
+                        except Exception as e:
+                            pass
+                    if dealerHand.isBlackjack():
+                        print("Dealer Blackjacked!")
+                        self.status = "SCORE"
+                        self.consumeCard( card )
+                        return
 
             if player['name'] == 'dealer':
-                if player['hand'].value() >= 17 or not self.playersRemain():
-                    self._currPlayerIndex = -1
-                    print("STATE CHANGE -> SCORE")
-                    self.status = "SCORE"
-                else:
+                dealerHand = self.getDealerHand()
+                if(   self.playersRemain()
+                  and ((dealerHand.value() == 17 and dealerHand.isSoft())
+                  or dealerHand.value() < 17)
+                ):
                     player['hand'].addCard( card )
                     #if not player['hand'].hasBusted():
                     self._currPlayerIndex -= 1
                     return
-
-            elif action == 'STAND':
+                else:
+                    self._currPlayerIndex = -1
+                    print("STATE CHANGE -> SCORE")
+                    self.status = "SCORE"
+            elif player['hand'].value != 21 and not player['hand'].hasBusted():
+                action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
+            else:
                 self.consumeCard( card )
-                return;
+                return
+
+            if action == 'STAND':
+                self.consumeCard( card )
+                return
             elif action in ['DOUBLE']:
                 player['hand'].addCard( card )
-                return;
+                return
             elif action in ['HIT','SPLIT']:
                 player['hand'].addCard( card )
                 if not player['hand'].hasBusted() and player['hand'].value() != 21:
                     self._currPlayerIndex -= 1
-                return;
+                return
             elif action not in ['STAND','HIT','DOUBLE','SPLIT']:
                 if player['hand'].value() >= 17:
                     self.consumeCard( card )
@@ -111,10 +130,29 @@ class GameState:
             for player in self.seats:
                 player['hand'] = Hand()
             #print("STATE CHANGE -> DEALING_HANDS")
+            if not self.newShoeFlag:
+                self.status = "DEALING_HANDS"
+                self._currPlayerIndex = -1
+                return self.consumeCard( card )
+            else:
+                print("Game over!")
+                self.status = 'GAMEOVER'
+                return
+
+    def _dealHand(self, player, card):
+        # Shoe empty and fresh round?
+        if( self._currPlayerIndex == 0 and len(player['hand'].cards) == 0):
             print("Dealing...")
-            self.status = "DEALING_HANDS"
-            self._currPlayerIndex = -1
-            self.consumeCard( card )
+
+        # Player one have enough cards?
+        if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
+            self.printGameTable()
+            self.status = "DELT"
+            print("STATE CHANGE -> DELT")
+            return True;
+        else:
+            player['hand'].addCard( card )
+            return None
 
     def kickPlayer(self, playerName, action):
         print("Kicking %s, invalid action %s, %s players Remain" % (playerName, action, len(self.seats)-2) )
@@ -134,12 +172,23 @@ class GameState:
         if self.status == "SCORE":
             dealer = self.getDealerHand()
             for seat in self.seats:
-                if( seat['hand'].value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(seat['hand'].cards) == 2):
+                seat['handsPlayed'] += 1
+                if( (seat['hand'].value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(seat['hand'].cards) == 2)
+                 or (seat['name'] != 'dealer' and seat['hand'].value() == 21 and len(seat['hand'].cards) == 2 and dealer.value() == 21 and len(dealer.cards) > 2)
+                ):
                     score = '*!BlackJack!*'
                     seat['stats']['wins'] +=1
                     seat['stats']['bjs']  +=1
                 elif seat['name'] == 'dealer':
-                    score = ''
+                    if not seat['hand'].hasBusted():
+                        if not self.playersRemain():
+                            score = 'Winner!'
+                            seat['stats']['wins'] +=1
+                        else:
+                            score = ''
+                    else:
+                        score = ''
+                        seat['stats']['busts'] +=1
                 elif( seat['hand'].value() > 21):
                     score = ''
                     seat['stats']['busts'] +=1
@@ -149,8 +198,10 @@ class GameState:
                 elif( seat['hand'].value() < 22 and seat['hand'].value() > dealer.value() ):
                     score = 'Winner!'
                     seat['stats']['wins'] +=1
+                    self.getDealer()['stats']['loses'] += 1
                 elif( seat['hand'].value() < 22 and seat['hand'].value() == dealer.value() ):
                     score = 'push'
+                    self.getDealer()['stats']['pushes'] += 1
                     seat['stats']['pushes'] +=1
                 elif( seat['hand'].value() < 22 and seat['hand'].value() < dealer.value() ):
                     score = 'LOSER'
@@ -161,7 +212,9 @@ class GameState:
         else:
             for seat in self.seats:
                 if seat['name'] in ['dealer','Dealer']:
-                    game.append( { 'name': seat['name'], 'hand': seat['hand'].dealerHand(), 'handVal': '?', 'score': ''} )
+                    game.append( { 'name': seat['name'],
+                        'hand': seat['hand'].dealerHand(),
+                        'handVal': Card.value(seat['hand'].cards[0]), 'score': ''} )
                 else:
                     game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'score': ''} )
 
@@ -171,24 +224,25 @@ class GameState:
         for seat in self.seats:
             if seat['name'] != 'DEALER' and not seat['hand'].hasBusted():
                 return True
+        return False
 
     def gameStateJson(self):
-        return json.dumps(self.gameState())
+        return json.dumps(self.gameState(), sort_keys=True, indent=4 )
+
+    def getDealer(self):
+        return self.seats[-1]
 
     def getDealerHand(self):
-        return self.seats[-1]['hand']
+        return self.getDealer()['hand']
 
     def printGameTable(self):
         for idx, seat in enumerate(self.gameState()):
             if seat['name'] in ['dealer','Dealer']:
-                gameStringDealer = color.BOLD + color.RED + "Name: {name:32s} Hand: " + color.PURPLE + "{hand}" + color.END + "{score}" + color.END + color.END
+                gameStringDealer = (color.BOLD + color.RED + "Name: {name:32s} Hand: " +
+                    color.PURPLE + "{hand}" + color.END + "{score}" + color.END + color.END)
                 print( gameStringDealer.format_map( seat ) )
             else:
                 gameString = color.iterable[idx] + "Name: {name:32s} Hand: {hand}{score}" + color.END
                 print( gameString.format_map( seat ) )
-
-
-
-
 
 

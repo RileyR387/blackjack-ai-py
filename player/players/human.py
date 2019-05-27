@@ -2,6 +2,7 @@
 from game.color import color
 
 def nextAction(gameStateJson, myHand):
+    print( gameStateJson )
     key = input(("(S)Stand|(H)Hit|(D)Double|(P)Split: (default (S)): \n " + color.GREEN + " %s " + color.END + " :") % myHand)
     if key in ['S','s','stand']:
         return 'STAND'
@@ -10,7 +11,10 @@ def nextAction(gameStateJson, myHand):
     elif key in ['D','d','double','dub']:
         return 'DOUBLE'
     elif key in ['P','p','split','2','Y','y']:
-        return 'SPLIT'
+        if myHand.canSplit():
+            return 'SPLIT'
+        else:
+            return 'STAND'
     else:
         return 'STAND'
 

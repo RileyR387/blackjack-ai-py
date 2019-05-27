@@ -10,7 +10,7 @@ class Game:
         self.opts = opts
         self.players = players
 
-        self.gameState = GameState.GameState( opts['decks'], players )
+        self.gameState = GameState.GameState( opts['decks'], opts['insurance'], players )
         self.shoe  =  DealersShoe.DealersShoe(opts['decks'])
 
         self.house = {
@@ -31,6 +31,7 @@ class Game:
             try:
                 card = self.shoe.nextCard()
             except ShuffleShoeException as e:
+                print( "Last hand in shoe!" )
                 self.gameState.newShoeFlag = True
                 card = self.shoe.nextCard()
 
@@ -45,5 +46,23 @@ class Game:
         #for player in self.gameState.gameState():
         #for player in self.gameState.gameState():
         for idx, player in enumerate(self.gameState.seats):
-            print( json.dumps( {'name': player['name'], 'seat': idx, 'stats': player['stats'] }, sort_keys=True, indent=4 ) )
+            print( json.dumps( {
+              'name': player['name'],
+              'seat': idx,
+              'handsPlayed': player['handsPlayed'],
+              'stats': player['stats']
+            }, sort_keys=True, indent=4 ) )
+
+
+
+
+
+
+
+
+
+
+
+
+
 

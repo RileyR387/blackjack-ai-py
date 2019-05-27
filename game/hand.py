@@ -3,6 +3,7 @@ from . import Card
 
 class Hand:
     def __init__(self):
+        self._handIsSoft = False
         self.cards = []
 
     def __str__(self):
@@ -20,6 +21,7 @@ class Hand:
 
     def addCard(self, card):
         self.cards.append( card )
+        return self.value()
 
     def hasBusted(self):
         if self.value() > 21:
@@ -27,17 +29,37 @@ class Hand:
         else:
             return False
 
+    def isSoft(self):
+        return self._handIsSoft
+
+    def isBlackjack(self):
+        if self.value() == 21 and len(self.cards) == 2:
+            return True
+        else:
+            return False
+
+    def canSplit(self):
+        if Card.value(self.cards[0]) == Card.value(self.cards[1]) and len(self.cards) == 2:
+            return True
+        else:
+            return False
+
+    def offerInsurance(self):
+        if Card.value(self.cards[0]) == 11 and len(self.cards) == 2:
+            return True
+        else:
+            return False
+
     def dealerHand(self):
         return "%-32s %4s " % (
                     self.cards[0] + " XXX",
-                    '(??)'
+                    '('+str(Card.value(self.cards[0]))+')'
                 )
-
-
 
     def value(self):
         x = 0
         aceCount = 0
+        self._handIsSoft = False
         for card in self.cards:
             cVal = Card.value( card );
             if cVal == 11:
@@ -48,12 +70,14 @@ class Hand:
 
         while( aceCount > 0 ):
             if x == 10 and aceCount == 1:
+                self._handIsSoft = True
                 x += 11
                 aceCount -= 1
             elif x > 10-aceCount:
                 x += 1
                 aceCount -= 1
             else:
+                self._handIsSoft = True
                 x += 11
                 aceCount -= 1
 
