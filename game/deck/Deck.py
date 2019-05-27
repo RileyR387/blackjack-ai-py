@@ -1,4 +1,5 @@
 
+from game.color import color
 
 def cards():
     spade= u"\u2660"

@@ -1,4 +1,6 @@
 
+from pprint import pprint
+import json
 from . import DealersShoe, GameState
 from .exception import ShuffleShoeException
 
@@ -34,9 +36,14 @@ class Game:
 
             self.gameState.consumeCard( card )
 
-            if self.gameState.status != "DEALING_HANDS":
-                self.gameState.printGameTable()
+            #if self.gameState.status != "DEALING_HANDS":
+            #    self.gameState.printGameTable()
 
-            #for player in self.players.keys():
-            #    self.players[player].nextAction( self.gameState )
+        ##
+        # Game Over
+        #for player in self.gameState.seats:
+        #for player in self.gameState.gameState():
+        #for player in self.gameState.gameState():
+        for idx, player in enumerate(self.gameState.seats):
+            print( json.dumps( {'name': player['name'], 'seat': idx, 'stats': player['stats'] }, sort_keys=True, indent=4 ) )
 

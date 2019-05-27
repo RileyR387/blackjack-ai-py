@@ -2,7 +2,17 @@
 
 import os
 import sys
+import argparse
 import json
+#from yaml import load
+
+opts = argparse.ArgumentParser(
+    description=""
+)
+opts.add_argument('-i','--interactive', action='store_true',
+    help='interactive, Enable the human player.')
+
+args = opts.parse_args()
 
 import importlib
 import pkgutil
@@ -24,6 +34,7 @@ game_opts = {
 table_seats = {
     name: importlib.import_module(name)
         for finder, name, ispkg in iter_namespace(player.players)
+            if name != 'player.players.human' or args.interactive
 }
 
 game = Game.Game( game_opts, table_seats )

@@ -20,6 +20,13 @@ class GameState:
                 'name': player,
                 'hand': Hand(),
                 'agent': players[player],
+                'stats': {
+                   'bjs': 0,
+                   'wins': 0,
+                   'pushes': 0,
+                   'loses': 0,
+                   'busts': 0,
+                },
             })
 
         random.shuffle(self.seats)
@@ -30,6 +37,13 @@ class GameState:
             'name': 'dealer',
             'hand': Hand(),
             'agent': Dealer(),
+                'stats': {
+                   'bjs': 0,
+                   'wins': 0,
+                   'pushes': 0,
+                   'loses': 0,
+                   'busts': 0,
+                },
         })
         print("Creating initial game state for %s players" % len(self.seats))
 
@@ -93,10 +107,11 @@ class GameState:
             self.status = "RESET"
 
         if self.status == "RESET":
-            print("\nReseting Table")
+            #print("\nReseting Table")
             for player in self.seats:
                 player['hand'] = Hand()
-            print("STATE CHANGE -> DEALING_HANDS")
+            #print("STATE CHANGE -> DEALING_HANDS")
+            print("Dealing...")
             self.status = "DEALING_HANDS"
             self._currPlayerIndex = -1
             self.consumeCard( card )
@@ -121,18 +136,26 @@ class GameState:
             for seat in self.seats:
                 if( seat['hand'].value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(seat['hand'].cards) == 2):
                     score = '*!BlackJack!*'
+                    seat['stats']['wins'] +=1
+                    seat['stats']['bjs']  +=1
                 elif seat['name'] == 'dealer':
                     score = ''
                 elif( seat['hand'].value() > 21):
                     score = ''
+                    seat['stats']['busts'] +=1
                 elif( dealer.value() > 21 and seat['hand'].value() < 22):
                     score = 'Winner!'
+                    seat['stats']['wins'] +=1
                 elif( seat['hand'].value() < 22 and seat['hand'].value() > dealer.value() ):
                     score = 'Winner!'
+                    seat['stats']['wins'] +=1
                 elif( seat['hand'].value() < 22 and seat['hand'].value() == dealer.value() ):
                     score = 'push'
+                    seat['stats']['pushes'] +=1
                 elif( seat['hand'].value() < 22 and seat['hand'].value() < dealer.value() ):
                     score = 'LOSER'
+                    seat['stats']['loses'] +=1
+
 
                 game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'score': score } )
         else:
@@ -156,11 +179,16 @@ class GameState:
         return self.seats[-1]['hand']
 
     def printGameTable(self):
-        gameStringDealer = "Name: {name:32s} Hand: " + color.PURPLE + "{hand}" + color.END + "{score}"
-        gameString = "Name: {name:32s} Hand: {hand}{score}"
-        for seat in self.gameState():
+        for idx, seat in enumerate(self.gameState()):
             if seat['name'] in ['dealer','Dealer']:
+                gameStringDealer = color.BOLD + color.RED + "Name: {name:32s} Hand: " + color.PURPLE + "{hand}" + color.END + "{score}" + color.END + color.END
                 print( gameStringDealer.format_map( seat ) )
             else:
+                gameString = color.iterable[idx] + "Name: {name:32s} Hand: {hand}{score}" + color.END
                 print( gameString.format_map( seat ) )
+
+
+
+
+
 
