@@ -207,16 +207,40 @@ class GameState:
                     score = 'LOSER'
                     seat['stats']['loses'] +=1
 
-
-                game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'score': score } )
+                game.append({
+                  seat['name']:
+                    {
+                      'name': seat['name'],
+                      'handStr': str(seat['hand']),
+                      'hand': seat['hand'].cards,
+                      'handVal': int(seat['hand']),
+                      'score': score,
+                    }
+                })
         else:
             for seat in self.seats:
                 if seat['name'] in ['dealer','Dealer']:
-                    game.append( { 'name': seat['name'],
-                        'hand': seat['hand'].dealerHand(),
-                        'handVal': Card.value(seat['hand'].cards[0]), 'score': ''} )
+                    game.append({
+                      seat['name']:
+                      {
+                        'name': seat['name'],
+                        'hand': seat['hand'].cards[0],
+                        'handStr': seat['hand'].dealerHand(),
+                        'handVal': Card.value(seat['hand'].cards[0]),
+                        'score': ''
+                      }
+                    })
                 else:
-                    game.append( { 'name': seat['name'], 'hand': str(seat['hand']), 'handVal': int(seat['hand']), 'score': ''} )
+                    game.append({
+                      seat['name']:
+                        {
+                          'name': seat['name'],
+                          'handStr': str(seat['hand']),
+                          'hand': seat['hand'].cards,
+                          'handVal': int(seat['hand']),
+                          'score': '',
+                        }
+                    })
 
         return game;
 
@@ -237,12 +261,13 @@ class GameState:
 
     def printGameTable(self):
         for idx, seat in enumerate(self.gameState()):
-            if seat['name'] in ['dealer','Dealer']:
-                gameStringDealer = (color.BOLD + color.RED + "Name: {name:32s} Hand: " +
-                    color.PURPLE + "{hand}" + color.END + "{score}" + color.END + color.END)
-                print( gameStringDealer.format_map( seat ) )
-            else:
-                gameString = color.iterable[idx] + "Name: {name:32s} Hand: {hand}{score}" + color.END
-                print( gameString.format_map( seat ) )
+            for playerName, player in seat.items():
+                if player['name'] in ['dealer','Dealer']:
+                    gameStringDealer = (color.BOLD + color.RED + "Name: {name:32s} Hand: " +
+                        color.PURPLE + "{handStr}" + color.END + "{score}" + color.END + color.END)
+                    print( gameStringDealer.format_map( player ) )
+                else:
+                    gameString = color.iterable[idx] + "Name: {name:32s} Hand: {handStr}{score}" + color.END
+                    print( gameString.format_map( player ) )
 
 
