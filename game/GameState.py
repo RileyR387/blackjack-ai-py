@@ -13,6 +13,7 @@ class GameState:
         self.seats = []
         self._currPlayerIndex = -1
         self._enableInsurance = insurance
+        self._MIN_BET = 5
         self.newShoeFlag = False
 
         for player in players.keys():
@@ -20,6 +21,7 @@ class GameState:
             self.seats.append({
                 'name': player,
                 'hand': Hand(),
+                'bet': 0,
                 'agent': players[player].Agent(),
                 'handsPlayed': 0,
                 'stats': {
@@ -38,6 +40,7 @@ class GameState:
         self.seats.append({
             'name': 'dealer',
             'hand': Hand(),
+            'bet': 0,
             'agent': Dealer(),
             'handsPlayed': 0,
                 'stats': {
@@ -58,18 +61,20 @@ class GameState:
                 pass
             else:
                 return
+
         if self.status == "DELT":
             if self._queryPlayers( player, card) is not None:
                 self.status = 'SCORE'
                 pass
             else:
                 return
+
         if self.status == "SCORE":
+            self._score()
             self.printGameTable()
-            self.status = "RESET"
-            pass
-        if self.status == "RESET":
+            #input()
             if self._clearRound():
+                self._takeBets()
                 self.consumeCard( card )
                 return
             else:
@@ -87,6 +92,13 @@ class GameState:
         else:
             return False
 
+    def _takeBets(self):
+        for player in self.seats:
+            try:
+                player['bet'] = player['agent'].placeBet( self.gameStateJson() )
+            except Exception as e:
+                player['bet'] = self._MIN_BET
+
     def _queryPlayers( self, player, card):
          action = None
          if not self._roundCanStart(player, card):
@@ -102,6 +114,7 @@ class GameState:
                  self._currPlayerIndex -= 1
                  return
              else:
+                 dealerHand.isFinal = True
                  self._currPlayerIndex = -1
                  print("STATE CHANGE -> SCORE")
                  self.status = "SCORE"
@@ -137,23 +150,17 @@ class GameState:
         return True
 
     def _handleAction(self, player, card):
-        thisHand = player['hand']
 
-        if thisHand.hasStood and thisHand.nextHand is not None:
-            while thisHand.nextHand is not None:
-                thisHand = thisHand.nextHand
-                if len(thisHand.cards) is 1:
-                    thisHand.addCard( card )
-                    self._currPlayerIndex -= 1
-                    return
-                if thisHand.hasStood == False:
-                    break
+        thisHand = self._nextHand(player, card)
+
+        if thisHand is None:
+            return
 
         action = player['agent'].nextAction( self.gameStateJson(), thisHand )
         if action == 'STAND':
-            thisHand.hasStood = True
+            thisHand.isFinal = True
             while thisHand.nextHand is not None:
-                if thisHand.nextHand.hasStood == False:
+                if thisHand.nextHand.isFinal == False:
                     self._currPlayerIndex -= 1
                     break
 
@@ -161,39 +168,69 @@ class GameState:
             return
         elif action in ['DOUBLE']:
             thisHand.addCard( card )
+            thisHand.isFinal = True
             return
         elif action in ['HIT']:
             thisHand.addCard( card )
-            if not thisHand.hasBusted() and thisHand.value() != 21:
+            if( (not thisHand.hasBusted() and thisHand.value() != 21)
+                or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
+                ):
                 self._currPlayerIndex -= 1
+            else:
+                thisHand.isFinal = True
             return
         elif action in ['SPLIT']:
-            if player['hand'].canSplit():
+            if thisHand.canSplit():
                 thisHand.splitHand()
                 thisHand.addCard( card )
-                if( (not player['hand'].hasBusted() and player['hand'].value() != 21)
-                    or ( thisHand.nextHand is not None and thisHand.nextHand.hasStood == False )
+                if( (not thisHand.hasBusted() and thisHand.value() != 21)
+                    or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
                     ):
                     self._currPlayerIndex -= 1
+                else:
+                    thisHand.isFinal = True
                 return
             else:
                 thisHand.addCard( card )
-                if not thisHand.hasBusted() and thisHand.value() != 21:
+                if( (not thisHand.hasBusted() and thisHand.value() != 21)
+                    or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
+                    ):
                     self._currPlayerIndex -= 1
+                else:
+                    thisHand.isFinal = True
                 return
         elif action not in ['STAND','HIT','DOUBLE','SPLIT']:
-            if player['hand'].value() >= 17:
+            if thisHand.value() >= 17:
+                thisHand.isFinal = True
                 self.consumeCard( card )
                 return
             else:
-                player['hand'].addCard( card )
-                if not player['hand'].hasBusted():
+                thisHand.addCard( card )
+                if( (not thisHand.hasBusted() and thisHand.value() != 21)
+                    or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
+                    ):
                     self._currPlayerIndex -= 1
+                else:
+                    thisHand.isFinal = True
                 return
+
+    def _nextHand(self, player, card):
+        thisHand = player['hand']
+        if thisHand.isFinal and thisHand.nextHand is not None:
+            while thisHand.nextHand is not None:
+                thisHand = thisHand.nextHand
+                if len(thisHand.cards) is 1:
+                    thisHand.addCard( card )
+                    self._currPlayerIndex -= 1
+                    return None
+                if thisHand.isFinal == False:
+                    return thisHand
+        return thisHand
 
     def _dealHand(self, player, card):
         # Shoe empty and fresh round?
         if( self._currPlayerIndex == 0 and len(player['hand'].cards) == 0):
+            self._takeBets()
             print("Dealing...")
 
         # Player one have enough cards?
@@ -324,6 +361,9 @@ class GameState:
                 }, sort_keys=True, indent=4 )
             )
         return '[' + ',\n'.join(statsArray) + "]\n"
+
+    def _score(self):
+        pass
 
     def printGameTable(self):
         for idx, seat in enumerate(self.gameState()):

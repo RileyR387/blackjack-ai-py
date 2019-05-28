@@ -6,23 +6,27 @@ class Hand:
         self._handIsSoft = False
         self.cards = []
         self.nextHand = None
-        self.hasStood = False
+        self.isFinal = False
 
     def __str__(self):
-        BUSTED = ""
+        status = ''
         if self.value() > 21:
-            BUSTED = "BUSTED"
+            status = "BUSTED"
+
+        if self.value() <= 21 and not self.isFinal and len(self.cards) >= 2:
+            status = "active"
+
         if self.nextHand is not None:
             return ("%-32s %4s %s" % (
                         ' '.join(self.cards),
                         '('+str(self.value())+')',
-                        BUSTED
-                    )) + "\n" + str(self.nextHand)
+                        status
+                    )) + "\n  " + str(self.nextHand)
         else:
             return "%-32s %4s %s" % (
                         ' '.join(self.cards),
                         '('+str(self.value())+')',
-                        BUSTED
+                        status
                     )
 
     def __int__(self):
@@ -30,7 +34,9 @@ class Hand:
 
     def addCard(self, card):
         self.cards.append( card )
-        return self.value()
+        if self.value() == 21:
+            self.isFinal = True
+        return self.isFinal
 
     def hasBusted(self):
         if self.value() > 21:
