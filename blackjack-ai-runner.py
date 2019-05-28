@@ -4,7 +4,6 @@ import os
 import sys
 import argparse
 import json
-#from yaml import load
 
 opts = argparse.ArgumentParser(
     description=""

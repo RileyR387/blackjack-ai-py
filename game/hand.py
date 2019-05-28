@@ -58,6 +58,11 @@ class Hand:
             return True
         else:
             return False
+    def canDouble(self):
+        if len(self.cards) == 2:
+            return True
+        else:
+            return False
 
     def splitHand(self):
         self.nextHand = Hand()
