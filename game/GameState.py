@@ -55,6 +55,7 @@ class GameState:
 
     def consumeCard(self, card):
         player = self.nextPlayer()
+        #pprint.pprint( player['hand'].cards )
         if self.status == "DEALING_HANDS":
             if self._dealHand( player, card ) is not None:
                 self.status = 'DELT'
@@ -110,20 +111,20 @@ class GameState:
                and ((dealerHand.value() == 17 and dealerHand.isSoft())
                or dealerHand.value() < 17)
              ):
-                 player['hand'].addCard( card )
-                 self._currPlayerIndex -= 1
+                 dealerHand.addCard( card )
                  return
              else:
                  dealerHand.isFinal = True
-                 self._currPlayerIndex = -1
                  print("STATE CHANGE -> SCORE")
                  self.status = "SCORE"
                  return 'SCORE'
-         elif player['hand'].value != 21 and not player['hand'].hasBusted():
-             self._handleAction( player, card )
          else:
-             self.consumeCard( card )
-             return
+            self._handleAction( player, card )
+         #elif player['hand'].value != 21 and not player['hand'].hasBusted():
+         #    self._handleAction( player, card )
+         #else:
+         #    self.consumeCard( card )
+         #    return
 
     def _roundCanStart(self, player, card):
         if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
@@ -157,13 +158,9 @@ class GameState:
             return
 
         action = player['agent'].nextAction( self.gameStateJson(), thisHand )
+
         if action == 'STAND':
             thisHand.isFinal = True
-            while thisHand.nextHand is not None:
-                if thisHand.nextHand.isFinal == False:
-                    self._currPlayerIndex -= 1
-                    break
-
             self.consumeCard( card )
             return
         elif action in ['DOUBLE']:
@@ -175,7 +172,7 @@ class GameState:
             if( (not thisHand.hasBusted() and thisHand.value() != 21)
                 or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
                 ):
-                self._currPlayerIndex -= 1
+                pass
             else:
                 thisHand.isFinal = True
             return
@@ -186,7 +183,7 @@ class GameState:
                 if( (not thisHand.hasBusted() and thisHand.value() != 21)
                     or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
                     ):
-                    self._currPlayerIndex -= 1
+                    pass
                 else:
                     thisHand.isFinal = True
                 return
@@ -195,7 +192,7 @@ class GameState:
                 if( (not thisHand.hasBusted() and thisHand.value() != 21)
                     or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
                     ):
-                    self._currPlayerIndex -= 1
+                    pass
                 else:
                     thisHand.isFinal = True
                 return
@@ -209,7 +206,7 @@ class GameState:
                 if( (not thisHand.hasBusted() and thisHand.value() != 21)
                     or ( thisHand.nextHand is not None and thisHand.nextHand.isFinal == False )
                     ):
-                    self._currPlayerIndex -= 1
+                    pass
                 else:
                     thisHand.isFinal = True
                 return
@@ -221,7 +218,6 @@ class GameState:
                 thisHand = thisHand.nextHand
                 if len(thisHand.cards) is 1:
                     thisHand.addCard( card )
-                    self._currPlayerIndex -= 1
                     return None
                 if thisHand.isFinal == False:
                     return thisHand
@@ -229,18 +225,19 @@ class GameState:
 
     def _dealHand(self, player, card):
         # Shoe empty and fresh round?
-        if( self._currPlayerIndex == 0 and len(player['hand'].cards) == 0):
+        thisHand = player['hand']
+        if( self._currPlayerIndex == 0 and len(thisHand.cards) == 0):
             self._takeBets()
             print("Dealing...")
 
         # Player one have enough cards?
-        if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
+        if self._currPlayerIndex == 0 and len(thisHand.cards) == 2:
             self.printGameTable()
             self.status = "DELT"
             print("STATE CHANGE -> DELT")
-            return True;
+            return True
         else:
-            player['hand'].addCard( card )
+            thisHand.addCard( card )
             return None
 
     def kickPlayer(self, playerName, action):
@@ -249,7 +246,27 @@ class GameState:
         self._currPlayerIndex -= 1
 
     def nextPlayer(self):
-        self._currPlayerIndex += 1
+        if self.status == "DEALING_HANDS":
+            self._currPlayerIndex += 1
+            if self._currPlayerIndex >= len(self.seats):
+                self._currPlayerIndex = 0
+                return self.seats[0]
+            else:
+                return self.seats[self._currPlayerIndex]
+
+        if self._currPlayerIndex < 0:
+            self._currPlayerIndex = 0
+        else:
+            thisHand = self.seats[self._currPlayerIndex]['hand']
+            if thisHand.isFinal or thisHand.hasBusted():
+                while thisHand.nextHand is not None:
+                    thisHand = thisHand.nextHand
+                    if not thisHand.isFinal and not thisHand.hasBusted():
+                        return self.seats[self._currPlayerIndex]
+                self._currPlayerIndex += 1
+            else:
+                pass
+
         if self._currPlayerIndex >= len(self.seats):
             self._currPlayerIndex = 0
             return self.seats[0]
@@ -258,6 +275,7 @@ class GameState:
 
     def gameState(self):
         game = []
+        #pprint.pprint(self.seats)
         if self.status == "SCORE":
             dealer = self.getDealerHand()
             for seat in self.seats:

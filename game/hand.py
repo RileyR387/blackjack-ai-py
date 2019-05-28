@@ -34,7 +34,7 @@ class Hand:
 
     def addCard(self, card):
         self.cards.append( card )
-        if self.value() == 21:
+        if self.value() >= 21:
             self.isFinal = True
         return self.isFinal
 

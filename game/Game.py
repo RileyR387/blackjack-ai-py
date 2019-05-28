@@ -32,6 +32,7 @@ class Game:
                 self.gameState.newShoeFlag = True
                 card = self.shoe.nextCard()
             self.gameState.consumeCard( card )
+            #self.gameState.printGameTable()
         ##
         # Game Over
         print( self.gameState.statsJson() )
