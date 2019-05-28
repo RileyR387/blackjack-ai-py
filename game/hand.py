@@ -5,16 +5,25 @@ class Hand:
     def __init__(self):
         self._handIsSoft = False
         self.cards = []
+        self.nextHand = None
+        self.hasStood = False
 
     def __str__(self):
         BUSTED = ""
         if self.value() > 21:
             BUSTED = "BUSTED"
-        return "%-32s %4s %s" % (
-                    ' '.join(self.cards),
-                    '('+str(self.value())+')',
-                    BUSTED
-                )
+        if self.nextHand is not None:
+            return ("%-32s %4s %s" % (
+                        ' '.join(self.cards),
+                        '('+str(self.value())+')',
+                        BUSTED
+                    )) + "\n" + str(self.nextHand)
+        else:
+            return "%-32s %4s %s" % (
+                        ' '.join(self.cards),
+                        '('+str(self.value())+')',
+                        BUSTED
+                    )
 
     def __int__(self):
         return self.value()
@@ -43,6 +52,10 @@ class Hand:
             return True
         else:
             return False
+
+    def splitHand(self):
+        self.nextHand = Hand()
+        self.nextHand.addCard( self.cards.pop() )
 
     def offerInsurance(self):
         if Card.value(self.cards[0]) == 11 and len(self.cards) == 2:

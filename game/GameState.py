@@ -20,7 +20,7 @@ class GameState:
             self.seats.append({
                 'name': player,
                 'hand': Hand(),
-                'agent': players[player],
+                'agent': players[player].Agent(),
                 'handsPlayed': 0,
                 'stats': {
                    'bjs': 0,
@@ -137,18 +137,50 @@ class GameState:
         return True
 
     def _handleAction(self, player, card):
-        action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
+        thisHand = player['hand']
+
+        if thisHand.hasStood and thisHand.nextHand is not None:
+            while thisHand.nextHand is not None:
+                thisHand = thisHand.nextHand
+                if len(thisHand.cards) is 1:
+                    thisHand.addCard( card )
+                    self._currPlayerIndex -= 1
+                    return
+                if thisHand.hasStood == False:
+                    break
+
+        action = player['agent'].nextAction( self.gameStateJson(), thisHand )
         if action == 'STAND':
+            thisHand.hasStood = True
+            while thisHand.nextHand is not None:
+                if thisHand.nextHand.hasStood == False:
+                    self._currPlayerIndex -= 1
+                    break
+
             self.consumeCard( card )
             return
         elif action in ['DOUBLE']:
-            player['hand'].addCard( card )
+            thisHand.addCard( card )
             return
-        elif action in ['HIT','SPLIT']:
-            player['hand'].addCard( card )
-            if not player['hand'].hasBusted() and player['hand'].value() != 21:
+        elif action in ['HIT']:
+            thisHand.addCard( card )
+            if not thisHand.hasBusted() and thisHand.value() != 21:
                 self._currPlayerIndex -= 1
             return
+        elif action in ['SPLIT']:
+            if player['hand'].canSplit():
+                thisHand.splitHand()
+                thisHand.addCard( card )
+                if( (not player['hand'].hasBusted() and player['hand'].value() != 21)
+                    or ( thisHand.nextHand is not None and thisHand.nextHand.hasStood == False )
+                    ):
+                    self._currPlayerIndex -= 1
+                return
+            else:
+                thisHand.addCard( card )
+                if not thisHand.hasBusted() and thisHand.value() != 21:
+                    self._currPlayerIndex -= 1
+                return
         elif action not in ['STAND','HIT','DOUBLE','SPLIT']:
             if player['hand'].value() >= 17:
                 self.consumeCard( card )

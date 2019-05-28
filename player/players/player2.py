@@ -1,11 +1,12 @@
 
-def nextAction(gameStateJson, myHand):
-    return 'DOUBLE'
+class Agent:
+    def __init__(self):
+        self.name = "PlayerDos"
 
-def init( gameState ):
-    print("Hello! I'm player2!")
-    pass
+    def nextAction(self, gameStateJson, myHand):
+        return 'DOUBLE'
 
-def name():
-    return "PlayerDos"
+    def init(self, gameState ):
+        print("Hello! I'm player2!")
+        pass
 

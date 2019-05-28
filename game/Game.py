@@ -22,10 +22,8 @@ class Game:
         print( "Game running" )
 
         self.shoe.dumpShoe()
-
-        for player in self.players.keys():
-            self.players[player].init( self.gameState )
-
+        ##
+        # Play!
         while self.gameState.status != "GAMEOVER":
             try:
                 card = self.shoe.nextCard()
@@ -33,12 +31,7 @@ class Game:
                 print( "Last hand in shoe!" )
                 self.gameState.newShoeFlag = True
                 card = self.shoe.nextCard()
-
             self.gameState.consumeCard( card )
-
-            #if self.gameState.status != "DEALING_HANDS":
-            #    self.gameState.printGameTable()
-
         ##
         # Game Over
         print( self.gameState.statsJson() )
