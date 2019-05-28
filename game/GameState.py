@@ -233,7 +233,7 @@ class GameState:
                 if len(thisHand.cards) is 1:
                     thisHand.addCard( card )
                     return None
-                if thisHand.isFinal == False:
+                if not thisHand.isFinal and not thisHand.hasBusted():
                     return thisHand
         return thisHand
 

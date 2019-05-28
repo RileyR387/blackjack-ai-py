@@ -10,7 +10,7 @@ class Agent:
     def nextAction(self, gameStateJson, myHand):
         gameState = json.loads(gameStateJson)
 
-        if myHand.value() in [9,10,11] and myHand.canSplit():
+        if myHand.value() < 18 and myHand.canSplit():
             return 'SPLIT'
 
         if myHand.value() in [9,10,11] and myHand.canDouble():
