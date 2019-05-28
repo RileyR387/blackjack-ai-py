@@ -48,95 +48,114 @@ class GameState:
                    'busts': 0,
                 },
         })
-        print("Creating initial game state for %s players" % len(self.seats))
+        print("Created initial game state for %s players" % (len(self.seats)-1))
 
     def consumeCard(self, card):
         player = self.nextPlayer()
-
         if self.status == "DEALING_HANDS":
             if self._dealHand( player, card ) is not None:
                 self.status = 'DELT'
+                pass
             else:
                 return
-
         if self.status == "DELT":
-
-            action = None
-
-            if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
-                dealerHand = self.getDealerHand()
-                if dealerHand.offerInsurance() and self._enableInsurance:
-                    print("Offering Insurance...")
-                    for seat in self.seats:
-                        try:
-                            if seat['agent'].takeInsurance( self.gameStateJson(), player['hand'] ):
-                                #TODO: account for insurance
-                                pass
-                        except Exception as e:
-                            pass
-                    if dealerHand.isBlackjack():
-                        print("Dealer Blackjacked!")
-                        self.status = "SCORE"
-                        self.consumeCard( card )
-                        return
-
-            if player['name'] == 'dealer':
-                dealerHand = self.getDealerHand()
-                if(   self.playersRemain()
-                  and ((dealerHand.value() == 17 and dealerHand.isSoft())
-                  or dealerHand.value() < 17)
-                ):
-                    player['hand'].addCard( card )
-                    #if not player['hand'].hasBusted():
-                    self._currPlayerIndex -= 1
-                    return
-                else:
-                    self._currPlayerIndex = -1
-                    print("STATE CHANGE -> SCORE")
-                    self.status = "SCORE"
-            elif player['hand'].value != 21 and not player['hand'].hasBusted():
-                action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
+            if self._queryPlayers( player, card) is not None:
+                self.status = 'SCORE'
+                pass
             else:
-                self.consumeCard( card )
                 return
-
-            if action == 'STAND':
-                self.consumeCard( card )
-                return
-            elif action in ['DOUBLE']:
-                player['hand'].addCard( card )
-                return
-            elif action in ['HIT','SPLIT']:
-                player['hand'].addCard( card )
-                if not player['hand'].hasBusted() and player['hand'].value() != 21:
-                    self._currPlayerIndex -= 1
-                return
-            elif action not in ['STAND','HIT','DOUBLE','SPLIT']:
-                if player['hand'].value() >= 17:
-                    self.consumeCard( card )
-                    return
-                else:
-                    player['hand'].addCard( card )
-                    if not player['hand'].hasBusted():
-                        self._currPlayerIndex -= 1
-                    return
-
         if self.status == "SCORE":
             self.printGameTable()
             self.status = "RESET"
-
+            pass
         if self.status == "RESET":
-            #print("\nReseting Table")
-            for player in self.seats:
-                player['hand'] = Hand()
-            #print("STATE CHANGE -> DEALING_HANDS")
-            if not self.newShoeFlag:
-                self.status = "DEALING_HANDS"
-                self._currPlayerIndex = -1
-                return self.consumeCard( card )
+            if self._clearRound():
+                self.consumeCard( card )
+                return
             else:
                 print("Game over!")
                 self.status = 'GAMEOVER'
+                return
+
+    def _clearRound(self):
+        for player in self.seats:
+            player['hand'] = Hand()
+        if not self.newShoeFlag:
+            self.status = "DEALING_HANDS"
+            self._currPlayerIndex = -1
+            return True
+        else:
+            return False
+
+    def _queryPlayers( self, player, card):
+         action = None
+         if not self._roundCanStart(player, card):
+             return 'SCORE'
+
+         if player['name'] == 'dealer':
+             dealerHand = self.getDealerHand()
+             if(   self.playersRemain()
+               and ((dealerHand.value() == 17 and dealerHand.isSoft())
+               or dealerHand.value() < 17)
+             ):
+                 player['hand'].addCard( card )
+                 self._currPlayerIndex -= 1
+                 return
+             else:
+                 self._currPlayerIndex = -1
+                 print("STATE CHANGE -> SCORE")
+                 self.status = "SCORE"
+                 return 'SCORE'
+         elif player['hand'].value != 21 and not player['hand'].hasBusted():
+             self._handleAction( player, card )
+         else:
+             self.consumeCard( card )
+             return
+
+    def _roundCanStart(self, player, card):
+        if self._currPlayerIndex == 0 and len(player['hand'].cards) == 2:
+            dealerHand = self.getDealerHand()
+            if dealerHand.offerInsurance() and self._enableInsurance:
+                print("Offering Insurance...")
+                for seat in self.seats:
+                    try:
+                        if seat['agent'].takeInsurance( self.gameStateJson(), player['hand'] ):
+                            #TODO: account for insurance
+                            pass
+                    except Exception as e:
+                        pass
+                if dealerHand.isBlackjack():
+                    print("Dealer Blackjacked!")
+                    self.status = "SCORE"
+                    return False
+                else:
+                    pass
+            else:
+                pass
+        else:
+            return True
+
+    def _handleAction(self, player, card):
+        action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
+        if action == 'STAND':
+            self.consumeCard( card )
+            return
+        elif action in ['DOUBLE']:
+            player['hand'].addCard( card )
+            return
+        elif action in ['HIT','SPLIT']:
+            player['hand'].addCard( card )
+            if not player['hand'].hasBusted() and player['hand'].value() != 21:
+                self._currPlayerIndex -= 1
+            return
+        elif action not in ['STAND','HIT','DOUBLE','SPLIT']:
+            if player['hand'].value() >= 17:
+                self.consumeCard( card )
+                return
+            else:
+                player['hand'].addCard( card )
+                if not player['hand'].hasBusted():
+                    self._currPlayerIndex -= 1
                 return
 
     def _dealHand(self, player, card):
@@ -258,6 +277,20 @@ class GameState:
 
     def getDealerHand(self):
         return self.getDealer()['hand']
+
+    def statsJson(self):
+        statsArray = []
+        statsStr = '';
+        for idx, player in enumerate(self.seats):
+            statsArray.append(
+                json.dumps( {
+                  'name': player['name'],
+                  'seat': idx,
+                  'handsPlayed': player['handsPlayed'],
+                  'stats': player['stats']
+                }, sort_keys=True, indent=4 )
+            )
+        return '[' + ',\n'.join(statsArray) + "]\n"
 
     def printGameTable(self):
         for idx, seat in enumerate(self.gameState()):

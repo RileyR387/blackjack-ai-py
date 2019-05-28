@@ -13,5 +13,5 @@ run:
 	./venv/bin/python blackjack-ai-runner.py
 
 play:
-	./venv/bin/python blackjack-ai-runner.py -i
+	./venv/bin/python blackjack-ai-runner.py --interactive
 
