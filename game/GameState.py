@@ -133,7 +133,8 @@ class GameState:
             else:
                 pass
         else:
-            return True
+            pass
+        return True
 
     def _handleAction(self, player, card):
         action = player['agent'].nextAction( self.gameStateJson(), player['hand'] )
@@ -202,12 +203,12 @@ class GameState:
                     if not seat['hand'].hasBusted():
                         if not self.playersRemain():
                             score = 'Winner!'
-                            seat['stats']['wins'] +=1
+                            seat['stats']['wins'] += 1
                         else:
                             score = ''
                     else:
                         score = ''
-                        seat['stats']['busts'] +=1
+                        seat['stats']['busts'] += 1
                 elif( seat['hand'].value() > 21):
                     score = ''
                     seat['stats']['busts'] +=1
