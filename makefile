@@ -6,6 +6,9 @@ init:
 		python3 -m venv venv ;} && \
 	  test -r requirements.txt && ./venv/bin/pip install requirements.txt || exit 0;
 
+update_deps:
+	./venv/bin/pipreqs ./
+
 test:
 	./venv/bin/python -m unittest
 
@@ -14,4 +17,8 @@ run:
 
 play:
 	./venv/bin/python blackjack-ai-runner.py --interactive
+
+clean:
+	rm -r venv && \
+	  find . -type d -name __pycache__ -exec rm -r {} \;
 
