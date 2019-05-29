@@ -7,6 +7,7 @@ class Hand:
         self.cards = []
         self.nextHand = None
         self.isFinal = False
+        self._bet = 0
 
     def __str__(self):
         status = ''
@@ -16,18 +17,11 @@ class Hand:
         if self.value() <= 21 and not self.isFinal and len(self.cards) >= 2:
             status = "active"
 
-        if self.nextHand is not None:
-            return ("%-32s %4s %s" % (
-                        ' '.join(self.cards),
-                        '('+str(self.value())+')',
-                        status
-                    )) + "\n  " + str(self.nextHand)
-        else:
-            return "%-32s %4s %s" % (
-                        ' '.join(self.cards),
-                        '('+str(self.value())+')',
-                        status
-                    )
+        return "%-32s %4s %s" % (
+                    ' '.join(self.cards),
+                    '('+str(self.value())+')',
+                    status
+                )
 
     def __int__(self):
         return self.value()
@@ -54,7 +48,7 @@ class Hand:
             return False
 
     def canSplit(self):
-        if Card.value(self.cards[0]) == Card.value(self.cards[1]) and len(self.cards) == 2:
+        if len(self.cards) == 2 and Card.value(self.cards[0]) == Card.value(self.cards[1]):
             return True
         else:
             return False
@@ -65,8 +59,9 @@ class Hand:
             return False
 
     def splitHand(self):
-        self.nextHand = Hand()
-        self.nextHand.addCard( self.cards.pop() )
+        nextHand = Hand()
+        nextHand.addCard( self.cards.pop() )
+        return nextHand
 
     def offerInsurance(self):
         if Card.value(self.cards[0]) == 11 and len(self.cards) == 2:

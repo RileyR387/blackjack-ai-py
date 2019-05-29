@@ -7,6 +7,6 @@ class Agent:
         return 'DOUBLE'
 
     def init(self, gameState ):
-        print("Hello! I'm player2!")
+        print("Hello! I'm player2! I always double...")
         pass
 
