@@ -4,7 +4,7 @@
 init:
 	test -e ./venv/bin/python || {\
 		python3 -m venv venv ;} && \
-	  test -r requirements.txt && ./venv/bin/pip install requirements.txt || exit 0;
+	  test -r requirements.txt && ./venv/bin/pip install -r requirements.txt || exit 0;
 
 update_deps:
 	./venv/bin/pipreqs ./
