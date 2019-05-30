@@ -79,7 +79,6 @@ class GameState:
                 return
 
         if self.status == "SCORE":
-            self._score()
             self.printGameTable()
             #input()
             if self._clearRound():
@@ -258,9 +257,6 @@ class GameState:
         else:
             return self.seats[self._currPlayerIndex]
 
-    def _score(self):
-        pass
-
     def gameState(self):
         game = []
         #pprint.pprint(self.seats)
@@ -270,16 +266,20 @@ class GameState:
                 seat['roundsPlayed'] += 1
                 for hand in seat['hands']:
                     seat['handsPlayed'] += 1
+                    ##
+                    # Blackjack
                     if( (hand.value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(hand.cards) == 2)
                      or (seat['name'] != 'dealer' and hand.value() == 21 and len(hand.cards) == 2 and dealer.value() == 21 and len(dealer.cards) > 2)
                     ):
                         score = '*!BlackJack!*'
-                        seat['stats']['wins'] +=1
                         seat['stats']['bjs']  +=1
-                        seat['bankRoll'] += (hand._bet*THREE_TO_TWO)+hand._bet
-                        self.getDealer()['bankRoll'] -= hand._bet*1.5
+                        seat['stats']['wins'] +=1
+                        seat['bankRoll'] += ((hand._bet * THREE_TO_TWO) + hand._bet)
+                        self.getDealer()['bankRoll'] -= (hand._bet * THREE_TO_TWO)
                         self.getDealer()['stats']['loses'] += 1
                         hand._bet = 0
+                    ##
+                    # Dealer
                     elif seat['name'] == 'dealer':
                         if not hand.hasBusted():
                             if not self.playersRemain():
@@ -290,11 +290,15 @@ class GameState:
                         else:
                             score = ''
                             seat['stats']['busts'] += 1
+                    ##
+                    # Busts
                     elif( hand.value() > 21):
                         score = ''
-                        seat['stats']['busts'] +=1
+                        seat['stats']['busts'] += 1
                         self.getDealer()['bankRoll'] += hand._bet
                         hand._bet = 0
+                    ##
+                    # Wins
                     elif(
                         (dealer.value() > 21 and hand.value() < 22)
                       or
@@ -302,19 +306,24 @@ class GameState:
                       ):
                         score = 'Winner!'
                         seat['stats']['wins'] +=1
-                        seat['bankRoll'] += hand._bet*2
+                        seat['bankRoll'] += (hand._bet*2)
+                        ## Deailer
                         self.getDealer()['bankRoll'] -= hand._bet
                         self.getDealer()['stats']['loses'] += 1
+                        ## Reset
                         hand._bet = 0
+                    ##
+                    # Pushes
                     elif( hand.value() < 22 and hand.value() == dealer.value() ):
                         score = 'push'
                         self.getDealer()['stats']['pushes'] += 1
-                        seat['stats']['pushes'] +=1
+                        seat['stats']['pushes'] += 1
                         seat['bankRoll'] += hand._bet
                         hand._bet = 0
                     elif( hand.value() < 22 and hand.value() < dealer.value() ):
                         score = 'LOSER'
-                        seat['stats']['loses'] +=1
+                        seat['stats']['loses'] += 1
+                        self.getDealer()['stats']['wins'] += 1
                         self.getDealer()['bankRoll'] += hand._bet
                         hand._bet = 0
 
@@ -326,6 +335,7 @@ class GameState:
                           'hand': hand.cards,
                           'handVal': int(hand),
                           'score': score,
+                          'bankRoll': seat['bankRoll'],
                         }
                     })
         else: # Not scoring...
@@ -339,7 +349,8 @@ class GameState:
                             'hand': hand.cards[0],
                             'handStr': hand.dealerHand(),
                             'handVal': Card.value(hand.cards[0]),
-                            'score': ''
+                            'score': '',
+                            'bankRoll': seat['bankRoll'],
                           }
                         })
                     else:
@@ -351,6 +362,7 @@ class GameState:
                               'hand': hand.cards,
                               'handVal': int(hand),
                               'score': '',
+                              'bankRoll': seat['bankRoll'],
                             }
                         })
 
@@ -393,11 +405,11 @@ class GameState:
         for idx, seat in enumerate(self.gameState()):
             for playerName, player in seat.items():
                 if player['name'] in ['dealer','Dealer']:
-                    gameStringDealer = (color.BOLD + color.RED + "Name: {name:32s} Hand: " +
+                    gameStringDealer = (color.BOLD + color.RED + "{bankRoll:10.2f} Name: {name:32s} Hand: " +
                         color.PURPLE + "{handStr}" + color.END + "{score}" + color.END + color.END)
                     print( gameStringDealer.format_map( player ) )
                 else:
-                    gameString = color.iterable[(idx % len(color.iterable))] + "Name: {name:32s} Hand: {handStr}{score}" + color.END
+                    gameString = color.iterable[(idx % len(color.iterable))] + "{bankRoll:10.2f} Name: {name:32s} Hand: {handStr}{score}" + color.END
                     print( gameString.format_map( player ) )
 
 
