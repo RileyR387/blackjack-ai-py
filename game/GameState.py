@@ -27,10 +27,12 @@ class GameState:
                 'hands': [Hand()],
                 'agent': players[player].Agent(),
                 'roundsPlayed': 0,
+                'handsPlayed': 0,
                 'bankRoll': 1000,
                 'stats': {
                    'bjs': 0,
                    'wins': 0,
+                   'splits': 0,
                    'pushes': 0,
                    'loses': 0,
                    'busts': 0,
@@ -44,17 +46,18 @@ class GameState:
         self.seats.append({
             'name': 'dealer',
             'hands': [Hand()],
-            'bet': 0,
             'agent': Dealer(),
-            'bankRoll': 100000,
             'roundsPlayed': 0,
-                'stats': {
-                   'bjs': 0,
-                   'wins': 0,
-                   'pushes': 0,
-                   'loses': 0,
-                   'busts': 0,
-                },
+            'handsPlayed': 0,
+            'bankRoll': 100000,
+            'stats': {
+               'bjs': 0,
+               'wins': 0,
+               'splits': 0,
+               'pushes': 0,
+               'loses': 0,
+               'busts': 0,
+            },
         })
         print("Created initial game state for %s players" % (len(self.seats)-1))
 
@@ -90,7 +93,6 @@ class GameState:
     def _clearRound(self):
         for player in self.seats:
             player['hands'] = [Hand()]
-            player['bet'] = 0
         if not self.newShoeFlag:
             self.status = "DEALING_HANDS"
             self._currPlayerIndex = -1
@@ -100,13 +102,14 @@ class GameState:
 
     def _takeBets(self):
         for player in self.seats:
-            if player['name'] not in ['Dealer','dealer']:
-                try:
-                    player['bet'] = player['agent'].placeBet( self.gameStateJson() )
-                    player['bankRoll'] -= player['bet']
-                except Exception as e:
-                    player['bet'] = self._MIN_BET
-                    player['bankRoll'] -= player['bet']
+            for hand in player['hands']:
+                if player['name'] not in ['Dealer','dealer']:
+                    try:
+                        hand._bet = player['agent'].placeBet( self.gameStateJson() )
+                        player['bankRoll'] -= hand._bet
+                    except Exception as e:
+                        hand._bet = self._MIN_BET
+                        player['bankRoll'] -= hand._bet
 
     def _queryPlayers( self, player, card):
          action = None
@@ -169,8 +172,8 @@ class GameState:
         elif action in ['DOUBLE']:
             thisHand.addCard( card )
             if thisHand.canDouble():
-                player['bankRoll'] -= player['bet']
-                player['bet'] = player['bet']*2
+                player['bankRoll'] -= thisHand._bet
+                thisHand._bet = thisHand._bet*2
                 thisHand.isFinal = True
             if thisHand.hasBusted() or thisHand.value() == 21:
                 thisHand.isFinal = True
@@ -181,8 +184,9 @@ class GameState:
         elif action in ['SPLIT']:
             if thisHand.canSplit():
                 # FIXME: this won't work good at all.....
-                player['bankRoll'] -= player['bet']
-                player['bet'] = player['bet']*2
+                player['stats']['splits'] += 1
+                player['bankRoll'] -= thisHand._bet
+                thisHand._bet = thisHand._bet*2
                 player['hands'].append(thisHand.splitHand())
                 thisHand.addCard( card )
                 if thisHand.hasBusted() or thisHand.value() == 21:
@@ -264,16 +268,17 @@ class GameState:
             for seat in self.seats:
                 seat['roundsPlayed'] += 1
                 for hand in seat['hands']:
+                    seat['handsPlayed'] += 1
                     if( (hand.value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(hand.cards) == 2)
                      or (seat['name'] != 'dealer' and hand.value() == 21 and len(hand.cards) == 2 and dealer.value() == 21 and len(dealer.cards) > 2)
                     ):
                         score = '*!BlackJack!*'
                         seat['stats']['wins'] +=1
                         seat['stats']['bjs']  +=1
-                        seat['bankRoll'] += (seat['bet']*THREE_TO_TWO)+seat['bet']
-                        self.getDealer()['bankRoll'] -= seat['bet']*1.5
+                        seat['bankRoll'] += (hand._bet*THREE_TO_TWO)+hand._bet
+                        self.getDealer()['bankRoll'] -= hand._bet*1.5
                         self.getDealer()['stats']['loses'] += 1
-                        seat['bet'] = 0
+                        hand._bet = 0
                     elif seat['name'] == 'dealer':
                         if not hand.hasBusted():
                             if not self.playersRemain():
@@ -287,8 +292,8 @@ class GameState:
                     elif( hand.value() > 21):
                         score = ''
                         seat['stats']['busts'] +=1
-                        self.getDealer()['bankRoll'] += seat['bet']
-                        seat['bet'] = 0
+                        self.getDealer()['bankRoll'] += hand._bet
+                        hand._bet = 0
                     elif(
                         (dealer.value() > 21 and hand.value() < 22)
                       or
@@ -296,21 +301,21 @@ class GameState:
                       ):
                         score = 'Winner!'
                         seat['stats']['wins'] +=1
-                        seat['bankRoll'] += seat['bet']*2
-                        self.getDealer()['bankRoll'] -= seat['bet']
+                        seat['bankRoll'] += hand._bet*2
+                        self.getDealer()['bankRoll'] -= hand._bet
                         self.getDealer()['stats']['loses'] += 1
-                        seat['bet'] = 0
+                        hand._bet = 0
                     elif( hand.value() < 22 and hand.value() == dealer.value() ):
                         score = 'push'
                         self.getDealer()['stats']['pushes'] += 1
                         seat['stats']['pushes'] +=1
-                        seat['bankRoll'] += seat['bet']
-                        seat['bet'] = 0
+                        seat['bankRoll'] += hand._bet
+                        hand._bet = 0
                     elif( hand.value() < 22 and hand.value() < dealer.value() ):
                         score = 'LOSER'
                         seat['stats']['loses'] +=1
-                        self.getDealer()['bankRoll'] += seat['bet']
-                        seat['bet'] = 0
+                        self.getDealer()['bankRoll'] += hand._bet
+                        hand._bet = 0
 
                     game.append({
                       seat['name']:
@@ -376,6 +381,7 @@ class GameState:
                   'name': player['name'],
                   'seat': idx,
                   'roundsPlayed': player['roundsPlayed'],
+                  'handsPlayed': player['handsPlayed'],
                   'bankRoll': player['bankRoll'],
                   'stats': player['stats']
                 }, sort_keys=True, indent=4 )
@@ -390,7 +396,7 @@ class GameState:
                         color.PURPLE + "{handStr}" + color.END + "{score}" + color.END + color.END)
                     print( gameStringDealer.format_map( player ) )
                 else:
-                    gameString = color.iterable[idx] + "Name: {name:32s} Hand: {handStr}{score}" + color.END
+                    gameString = color.iterable[(idx % len(color.iterable))] + "Name: {name:32s} Hand: {handStr}{score}" + color.END
                     print( gameString.format_map( player ) )
 
 

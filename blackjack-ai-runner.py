@@ -11,6 +11,12 @@ opts = argparse.ArgumentParser(
 opts.add_argument('-i','--interactive', action='store_true',
     help='interactive, Enable the human player.')
 
+opts.add_argument('-d','--decks', type=int,
+    help='Number of decks in each shoe')
+
+opts.add_argument('-s','--shoes', type=int,
+    help='Number of shoes (games) to play')
+
 args = opts.parse_args()
 
 import importlib
@@ -25,7 +31,8 @@ def iter_namespace(ns_pkg):
     return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
 
 game_opts = {
-    'decks': 6,
+    'shoes': args.shoes or 1,
+    'decks': args.decks or 6,
     'hitSoft17': True,
     'insurance': True,
 }

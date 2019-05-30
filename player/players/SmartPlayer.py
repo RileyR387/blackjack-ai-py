@@ -17,7 +17,7 @@ class Agent:
             (
                 myHand.value() < 18
              or
-                (myHand.value() in range(18,20) and dealer['handVal'] in range(2,5))
+                (myHand.value() in range(18,21) and (dealer['handVal'] in range(2,7) or dealer['handVal'] == 11) )
             )
         ):
             print("%s: action: SPLIT" % self.name)
