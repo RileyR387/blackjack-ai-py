@@ -20,6 +20,7 @@ class GameState:
         self._enableInsurance = insurance
         self._MIN_BET = 5
         self.newShoeFlag = False
+        self.priorGameStateJson = ''
 
         for player in self.players.keys():
             print( "Loaded %s" % player )
@@ -91,6 +92,7 @@ class GameState:
                 return
 
     def _clearRound(self):
+        self.priorGameStateJson = self.gameStateJson()
         for player in self.seats:
             player['hands'] = [Hand()]
         if not self.newShoeFlag:
@@ -105,9 +107,10 @@ class GameState:
             for hand in player['hands']:
                 if player['name'] not in ['Dealer','dealer']:
                     try:
-                        hand._bet = player['agent'].placeBet( self.gameStateJson() )
+                        hand._bet = player['agent'].placeBet( self.priorGameStateJson )
                         player['bankRoll'] -= hand._bet
                     except Exception as e:
+                        print( e )
                         hand._bet = self._MIN_BET
                         player['bankRoll'] -= hand._bet
 
@@ -331,6 +334,7 @@ class GameState:
                       seat['name']:
                         {
                           'name': seat['name'],
+                          'agent': seat['agent'].name,
                           'handStr': str(hand),
                           'hand': hand.cards,
                           'handVal': int(hand),
@@ -343,7 +347,7 @@ class GameState:
                 for hand in seat['hands']:
                     if seat['name'] in ['dealer','Dealer']:
                         game.append({
-                          seat['name']:
+                          seat['agent'].name:
                           {
                             'name': seat['name'],
                             'hand': hand.cards[0],
@@ -355,7 +359,7 @@ class GameState:
                         })
                     else:
                         game.append({
-                          seat['name']:
+                          seat['agent'].name:
                             {
                               'name': seat['name'],
                               'handStr': str(hand),
