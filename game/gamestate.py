@@ -3,9 +3,10 @@ import random
 import json
 import pprint
 
-from . import Card
+import game.card as Card
+
 from .hand import Hand
-from .Dealer import Dealer
+from .dealer import Dealer
 from .color import color
 
 THREE_TO_TWO = 1.5

@@ -5,7 +5,7 @@ import pprint
 from .deck import Deck
 from .exception import ShuffleShoeException
 
-class DealersShoe:
+class DealerShoe:
     def __init__(self, deckCount):
         print("Creating dealers shoe with %s decks" % deckCount)
         self.shoe = []

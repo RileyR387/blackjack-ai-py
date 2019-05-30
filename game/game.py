@@ -1,7 +1,8 @@
 
 import json
-from . import DealersShoe, GameState
-from .exception import ShuffleShoeException
+from .dealershoe import DealerShoe
+from .gamestate  import GameState
+from .exception  import ShuffleShoeException
 
 class Game:
     def __init__(self, opts, players ):
@@ -9,8 +10,8 @@ class Game:
         self.opts = opts
         self.players = players
 
-        self.gameState = GameState.GameState( opts['decks'], opts['insurance'], players )
-        self.shoe  =  DealersShoe.DealersShoe(opts['decks'])
+        self.gameState = GameState( opts['decks'], opts['insurance'], players )
+        self.shoe  =  DealerShoe(opts['decks'])
 
         self.house = {
             'bankroll': 10^6,

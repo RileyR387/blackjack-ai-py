@@ -22,10 +22,9 @@ args = opts.parse_args()
 import importlib
 import pkgutil
 
-from game   import Game
-from player import PlayerModel
-
 import player.players
+
+from game.game   import Game
 
 def iter_namespace(ns_pkg):
     return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
@@ -43,7 +42,7 @@ table_seats = {
             if name != 'player.players.human' or args.interactive
 }
 
-game = Game.Game( game_opts, table_seats )
+game = Game( game_opts, table_seats )
 
 game.play()
 

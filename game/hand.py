@@ -1,5 +1,5 @@
 
-from . import Card
+import game.card as Card
 
 class Hand:
     def __init__(self):
