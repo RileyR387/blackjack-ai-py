@@ -8,11 +8,29 @@ class Agent:
         self.disableAutoPlay = False
         self.name = "Stacker"
         self.splitEnabled = True
+        self.lastBet = 5
 
     def placeBet(self, gameStateJson):
         #print( gameStateJson )
         gameState = json.loads(gameStateJson)
+        for seat in gameState:
+            for player,res in seat.items():
+                print( 'player: %s' % player )
+                print( 'res: %s' % res['score'] )
+                if player == 'player.players.SmartStacker':
+                    if self.lastBet <= 40 and res['score'] in [score.blackjack, score.win]:
+                        betFactor = 1.5
+                        print( "Stacked bet! (%s)" % (self.lastBet*betFactor))
+                        self.lastBet = self.lastBet*betFactor
+                        return (self.lastBet*betFactor)
+                    else:
+                        self.lastBet = 5
+                        return 5
+                else:
+                    pass
+
         dealer = gameState[-1]['dealer']
+        self.lastBet = 5
         return 5
 
     def nextAction(self, gameStateJson, myHand):
