@@ -8,14 +8,21 @@ import json
 opts = argparse.ArgumentParser(
     description=""
 )
-opts.add_argument('-i','--interactive', action='store_true',
+opts.add_argument('-i','--interactive', 
+    action='store_true',
     help='interactive, Enable the human player.')
 
-opts.add_argument('-d','--decks', type=int,
+opts.add_argument('-d','--decks', 
+    type=int,
     help='Number of decks in each shoe')
 
-opts.add_argument('-s','--shoes', type=int,
+opts.add_argument('-s','--shoes', 
+    type=int,
     help='Number of shoes (games) to play')
+
+opts.add_argument('-a','--agents', 
+    type=str, nargs='+', default='',
+    help='Agents to enable')
 
 args = opts.parse_args()
 
@@ -39,7 +46,7 @@ game_opts = {
 table_seats = {
     name: importlib.import_module(name)
         for finder, name, ispkg in iter_namespace(player.players)
-            if name != 'player.players.human' or args.interactive
+            if( ((name != 'player.players.human' or args.interactive) and len(args.agents) == 0) or (name in args.agents and len(args.agents) > 0))
 }
 
 game = Game( game_opts, table_seats )

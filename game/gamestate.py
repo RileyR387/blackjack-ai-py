@@ -35,6 +35,7 @@ class GameState:
                    'bjs': 0,
                    'wins': 0,
                    'splits': 0,
+                   'doubles': 0,
                    'pushes': 0,
                    'loses': 0,
                    'busts': 0,
@@ -56,6 +57,7 @@ class GameState:
                'bjs': 0,
                'wins': 0,
                'splits': 0,
+               'doubles': 0,
                'pushes': 0,
                'loses': 0,
                'busts': 0,
@@ -64,6 +66,7 @@ class GameState:
         print("Created initial game state for %s players" % (len(self.seats)-1))
 
     def consumeCard(self, card):
+        #self.printBankrollsBets();
         player = self.nextPlayer()
         if self.status == "DEALING_HANDS":
             if self._dealHand( player, card ) is not None:
@@ -83,13 +86,18 @@ class GameState:
             self.printGameTable()
             #input()
             if self._clearRound():
-                self._takeBets()
                 self.consumeCard( card )
                 return
             else:
                 print("Game over!")
                 self.status = 'GAMEOVER'
                 return
+
+
+    def printBankrollsBets(self):
+        for player in self.seats:
+            for hand in player['hands']:
+                print("player %s bankroll %s bet %s" % (player['name'], player['bankRoll'], hand._bet) )
 
     def _clearRound(self):
         self.priorGameStateJson = self.gameStateJson()
@@ -175,6 +183,7 @@ class GameState:
         elif action in ['DOUBLE']:
             thisHand.addCard( card )
             if thisHand.canDouble():
+                player['stats']['doubles'] += 1
                 player['bankRoll'] -= thisHand._bet
                 thisHand._bet = thisHand._bet*2
                 thisHand.isFinal = True

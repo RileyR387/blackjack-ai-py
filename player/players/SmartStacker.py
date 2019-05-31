@@ -10,7 +10,7 @@ class Agent:
         self.splitEnabled = True
 
     def placeBet(self, gameStateJson):
-        print( gameStateJson )
+        #print( gameStateJson )
         gameState = json.loads(gameStateJson)
         dealer = gameState[-1]['dealer']
         return 5
