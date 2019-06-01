@@ -15,17 +15,25 @@ class Game:
         self.gameState = GameState( opts['decks'], opts['insurance'], players )
         self.shoe  =  DealerShoe(opts['decks'])
 
-        self.house = {
-            'bankroll': 10^6,
-            'minbet': 5,
-        }
         print( "Game initialized" )
 
     def play(self):
-        self.shoe.dumpShoe()
         print( "Game running" )
+        for itr in range(0, self.opts['shoes']):
+            if itr > 0:
+                self.shoe = DealerShoe(self.opts['decks'])
+                self.gameState.newShoeFlag = False
+                self.gameState.status = 'DEALING_HANDS'
+            self.runShoe()
+            print( self.gameState.statsJson() )
+
         ##
-        # Play!
+        # Game Over
+        #print( self.gameState.statsJson() )
+
+    def runShoe(self):
+        self.shoe.dumpShoe()
+        print( "Shoe running" )
         while self.gameState.status != "GAMEOVER":
             try:
                 card = self.shoe.nextCard()
@@ -40,7 +48,4 @@ class Game:
                 self.gameState.printGameTable()
                 print()
 
-        ##
-        # Game Over
-        print( self.gameState.statsJson() )
 

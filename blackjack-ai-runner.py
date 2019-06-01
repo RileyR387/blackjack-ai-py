@@ -17,7 +17,7 @@ opts.add_argument('-d','--decks',
     help='Number of decks in each shoe')
 
 opts.add_argument('-s','--shoes',
-    type=int,
+    type=int, default=10,
     help='Number of shoes (games) to play')
 
 opts.add_argument('-a','--agents',
