@@ -200,11 +200,11 @@ class GameState:
                 thisHand.isFinal = True
         elif action in ['SPLIT']:
             if thisHand.canSplit():
-                # FIXME: this won't work good at all.....
                 player['stats']['splits'] += 1
                 player['bankRoll'] -= thisHand._bet
-                thisHand._bet = thisHand._bet*2
-                player['hands'].append(thisHand.splitHand())
+                nextHand = thisHand.splitHand()
+                nextHand._bet = thisHand._bet
+                player['hands'].append(nextHand)
                 thisHand.addCard( card )
                 if thisHand.hasBusted() or thisHand.value() == 21:
                     thisHand.isFinal = True
