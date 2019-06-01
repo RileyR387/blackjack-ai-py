@@ -114,13 +114,13 @@ class GameState:
         for player in self.seats:
             for hand in player['hands']:
                 if player['name'] not in ['Dealer','dealer']:
-                    #try:
+                    try:
                         hand._bet = player['agent'].placeBet( self.priorGameStateJson )
                         player['bankRoll'] -= hand._bet
-                    #except Exception as e:
-                    #    print( e )
-                    #    hand._bet = self._MIN_BET
-                    #    player['bankRoll'] -= hand._bet
+                    except Exception as e:
+                        print( "%s failed to placeBet(), using minimums of %s"%( player['name'], self._MIN_BET))
+                        hand._bet = self._MIN_BET
+                        player['bankRoll'] -= hand._bet
 
     def _queryPlayers( self, player, card):
          action = None

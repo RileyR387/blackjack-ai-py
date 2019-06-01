@@ -7,6 +7,9 @@ class Hand:
         self.cards = []
         self.nextHand = None
         self.isFinal = False
+        self._wasSplitAces = False
+        self._canHit = True
+        self._canDouble = True
         self._bet = 0
 
     def __str__(self):
@@ -27,8 +30,14 @@ class Hand:
         return self.value()
 
     def addCard(self, card):
+        # Allow aces to re-split... How to prevent the option to hit though... hrmmm
+        if( self._wasSplitAces and Card.value(card) == 11 ):
+            self._wasSplitAces = False
+            self._canHit = False
+            self._canDouble = False
+
         self.cards.append( card )
-        if self.value() >= 21:
+        if self.value() >= 21 or self._wasSplitAces:
             self.isFinal = True
         return self.isFinal
 
@@ -52,6 +61,7 @@ class Hand:
             return True
         else:
             return False
+
     def canDouble(self):
         if len(self.cards) == 2:
             return True
@@ -59,9 +69,16 @@ class Hand:
             return False
 
     def splitHand(self):
-        nextHand = Hand()
-        nextHand.addCard( self.cards.pop() )
-        return nextHand
+        if self.canSplit():
+            if  Card.value(self.cards[0]) == 11:
+                self._wasSplitAces = True
+
+            nextHand = Hand()
+            nextHand.addCard( self.cards.pop() )
+            nextHand._wasSplitAces = self._wasSplitAces
+            return nextHand
+        else:
+            return None
 
     def offerInsurance(self):
         if Card.value(self.cards[0]) == 11 and len(self.cards) == 2:
