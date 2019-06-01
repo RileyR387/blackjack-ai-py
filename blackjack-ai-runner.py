@@ -24,6 +24,10 @@ opts.add_argument('-a','--agents',
     type=str, nargs='+', default='',
     help='Agents to enable')
 
+opts.add_argument('-v','--verbose',
+    action='store_true',
+    help='Agents to enable')
+
 args = opts.parse_args()
 
 import importlib
@@ -37,10 +41,11 @@ def iter_namespace(ns_pkg):
     return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
 
 game_opts = {
-    'shoes': args.shoes or 1,
+    'shoes': args.shoes or 2,
     'decks': args.decks or 6,
     'hitSoft17': True,
     'insurance': True,
+    'verbose': args.verbose or False,
 }
 
 print( "Loading agents: ", args.agents )

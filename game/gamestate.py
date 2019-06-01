@@ -359,30 +359,31 @@ class GameState:
         else: # Not scoring...
             for seat in self.seats:
                 for hand in seat['hands']:
-                    if seat['name'] in ['dealer','Dealer']:
-                        game.append({
-                          seat['agent'].name:
-                          {
-                            'name': seat['name'],
-                            'hand': hand.cards[0],
-                            'handStr': hand.dealerHand(),
-                            'handVal': Card.value(hand.cards[0]),
-                            'score': '',
-                            'bankRoll': seat['bankRoll'],
-                          }
-                        })
-                    else:
-                        game.append({
-                          seat['agent'].name:
-                            {
-                              'name': seat['name'],
-                              'handStr': str(hand),
-                              'hand': hand.cards,
-                              'handVal': int(hand),
-                              'score': '',
-                              'bankRoll': seat['bankRoll'],
-                            }
-                        })
+                    if len(hand.cards) > 0:
+                        if seat['name'] in ['dealer','Dealer']:
+                            game.append({
+                              seat['agent'].name:
+                              {
+                                'name': seat['name'],
+                                'hand': hand.cards[0],
+                                'handStr': hand.dealerHand(),
+                                'handVal': Card.value(hand.cards[0]),
+                                'score': '',
+                                'bankRoll': seat['bankRoll'],
+                              }
+                            })
+                        else:
+                            game.append({
+                              seat['agent'].name:
+                                {
+                                  'name': seat['name'],
+                                  'handStr': str(hand),
+                                  'hand': hand.cards,
+                                  'handVal': int(hand),
+                                  'score': '',
+                                  'bankRoll': seat['bankRoll'],
+                                }
+                            })
 
         return game;
 

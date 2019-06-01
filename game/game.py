@@ -1,5 +1,6 @@
 
 import json
+from pprint import pprint
 from .dealershoe import DealerShoe
 from .gamestate  import GameState
 from .exception  import ShuffleShoeException
@@ -7,6 +8,7 @@ from .exception  import ShuffleShoeException
 class Game:
     def __init__(self, opts, players ):
         print( "Game initializing" )
+        pprint( opts )
         self.opts = opts
         self.players = players
 
@@ -20,9 +22,8 @@ class Game:
         print( "Game initialized" )
 
     def play(self):
-        print( "Game running" )
-
         self.shoe.dumpShoe()
+        print( "Game running" )
         ##
         # Play!
         while self.gameState.status != "GAMEOVER":
@@ -32,8 +33,13 @@ class Game:
                 print( "Last hand in shoe!" )
                 self.gameState.newShoeFlag = True
                 card = self.shoe.nextCard()
+
             self.gameState.consumeCard( card )
-            #self.gameState.printGameTable()
+
+            if self.opts['verbose']:
+                self.gameState.printGameTable()
+                print()
+
         ##
         # Game Over
         print( self.gameState.statsJson() )
