@@ -114,13 +114,13 @@ class GameState:
         for player in self.seats:
             for hand in player['hands']:
                 if player['name'] not in ['Dealer','dealer']:
-                    try:
+                    #try:
                         hand._bet = player['agent'].placeBet( self.priorGameStateJson )
                         player['bankRoll'] -= hand._bet
-                    except Exception as e:
-                        print( e )
-                        hand._bet = self._MIN_BET
-                        player['bankRoll'] -= hand._bet
+                    #except Exception as e:
+                    #    print( e )
+                    #    hand._bet = self._MIN_BET
+                    #    player['bankRoll'] -= hand._bet
 
     def _queryPlayers( self, player, card):
          action = None
@@ -181,14 +181,19 @@ class GameState:
             self.consumeCard( card )
             return
         elif action in ['DOUBLE']:
-            thisHand.addCard( card )
+
             if thisHand.canDouble():
+                thisHand.addCard( card )
                 player['stats']['doubles'] += 1
                 player['bankRoll'] -= thisHand._bet
                 thisHand._bet = thisHand._bet*2
                 thisHand.isFinal = True
+            else:
+                thisHand.addCard( card )
+
             if thisHand.hasBusted() or thisHand.value() == 21:
                 thisHand.isFinal = True
+
         elif action in ['HIT']:
             thisHand.addCard( card )
             if thisHand.hasBusted() or thisHand.value() == 21:

@@ -3,40 +3,49 @@ import json
 from game.color import color
 from game.score import score
 
+from pprint import pprint
+
 class Agent:
     def __init__(self):
         self.disableAutoPlay = False
         self.name = "Stacker"
         self.splitEnabled = True
-        self.lastBet = 5
+        self.defaultBet = 10
+        self.lastBet = self.defaultBet
+        self.stackFactor = 1.5
 
     def placeBet(self, gameStateJson):
         #print( gameStateJson )
+        if gameStateJson is None or gameStateJson == '':
+            return self.lastBet
         gameState = json.loads(gameStateJson)
+        dealer = gameState[-1]['dealer']
+        myHands = self._myHands(gameState)
+
+        lossFound = False
+        for mySeat in myHands:
+            if mySeat['score'] not in [score.blackjack, score.win]:
+                lossFound = True
+
+        if not lossFound and self.lastBet <= 40:
+            self.lastBet = self.lastBet*self.stackFactor
+            print( "Stacked bet! (%s)" % self.lastBet)
+        else:
+            self.lastBet = self.defaultBet
+
+        return self.lastBet
+
+    def _myHands(self, gameState):
+        hands = []
         for seat in gameState:
             for player,res in seat.items():
-                print( 'player: %s' % player )
-                print( 'res: %s' % res['score'] )
                 if player == 'player.players.SmartStacker':
-                    if self.lastBet <= 40 and res['score'] in [score.blackjack, score.win]:
-                        betFactor = 1.5
-                        print( "Stacked bet! (%s)" % (self.lastBet*betFactor))
-                        self.lastBet = self.lastBet*betFactor
-                        return (self.lastBet*betFactor)
-                    else:
-                        self.lastBet = 5
-                        return 5
-                else:
-                    pass
-
-        dealer = gameState[-1]['dealer']
-        self.lastBet = 5
-        return 5
+                    hands.append( res )
+        return hands
 
     def nextAction(self, gameStateJson, myHand):
         gameState = json.loads(gameStateJson)
         dealer = gameState[-1]['dealer']
-
         if( self.splitEnabled and
             myHand.canSplit() and
             (
@@ -49,6 +58,7 @@ class Agent:
             return 'SPLIT'
 
         if myHand.value() in [10,11] and myHand.canDouble():
+            print("%s: action: DOUBLE" % self.name)
             return 'DOUBLE'
 
         if( myHand.value() >=17
