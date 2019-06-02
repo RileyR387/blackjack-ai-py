@@ -16,8 +16,10 @@ class Agent:
         self.riskLevel = 1
         self.maxRisk = 10
 
+    def notifyNewShoe(self):
+        pass
+
     def placeBet(self, gameStateJson):
-        #print( gameStateJson )
         if gameStateJson is None or gameStateJson == '':
             return self.lastBet
 
@@ -33,7 +35,7 @@ class Agent:
         if not lossFound and self.lastBet <= 40:
             self.lastBet = self.lastBet*self.stackFactor
             self.riskLevel += 1
-            print( "Stacked bet! (%s)" % self.lastBet)
+            print( "%s - Stacked bet! (%s)" % (self.name, self.lastBet))
         else:
             self.riskLevel = 1
             self.lastBet = self.defaultBet

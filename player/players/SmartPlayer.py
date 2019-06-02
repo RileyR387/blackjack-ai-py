@@ -8,6 +8,12 @@ class Agent:
         self.name = "Smarty"
         self.splitEnabled = True
 
+    def notifyNewShoe(self):
+        pass
+
+    def placeBet(self, gameStateJson):
+        return 5
+
     def nextAction(self, gameStateJson, myHand):
         gameState = json.loads(gameStateJson)
         dealer = gameState[-1]['dealer']

@@ -62,7 +62,7 @@ class Agent:
             self.riskLevel = 1
             self.lastBet = self.defaultBet
 
-        print("Bet - Shoe Count: %s" % self._getCount())
+        print("%s - Bet - Shoe Count: %s" % (self.name, self._getCount()))
 
         lossFound = False
         for mySeat in myHands:
@@ -72,11 +72,11 @@ class Agent:
         if not lossFound and self.lastBet <= 40 and self._getCount() > 5:
             self.lastBet = self.lastBet*self.stackFactor*2
             self.riskLevel += 2
-            print( "%s:stacked bet! (%s)" % self.lastBet)
+            print( "%s:stacked bet! (%s)" % (self.name, self.lastBet))
         elif not lossFound and self.lastBet <= 40 and self._getCount() > 1:
             self.lastBet = self.lastBet*self.stackFactor
             self.riskLevel += 1
-            print( "%s:stacked bet! (%s)" % self.lastBet)
+            print( "%s:stacked bet! (%s)" % (self.name, self.lastBet))
         elif not lossFound and self.lastBet <= 40 and self._getCount() >= 0:
             pass
         else:
@@ -97,7 +97,7 @@ class Agent:
         gameState = json.loads(gameStateJson)
         dealer = gameState[-1]['dealer']
         self._countRound(gameState)
-        print("NextAction - Shoe Count: %s" % self._getCount())
+        print("%s - NextAction - Shoe Count: %s" % (self.name, self._getCount()))
         if( self.riskLevel < self.maxRisk and self.splitEnabled and
             myHand.canSplit() and myHand.cards[0] not in [2,3,4,5,6] and
             (
