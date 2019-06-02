@@ -122,6 +122,15 @@ class GameState:
                         hand._bet = self._MIN_BET
                         player['bankRoll'] -= hand._bet
 
+    def lastHandNotify(self):
+        for player in self.seats:
+            for hand in player['hands']:
+                if player['name'] not in ['Dealer','dealer']:
+                    try:
+                        player['agent'].notifyNewShoe()
+                    except Exception as e:
+                        print( "%s missing notifyNewShoe()" % player['name'])
+
     def _queryPlayers( self, player, card):
          action = None
          if not self._roundCanStart(player, card):
@@ -349,8 +358,8 @@ class GameState:
                         {
                           'name': seat['name'],
                           'agent': seat['agent'].name,
-                          'handStr': str(hand),
                           'hand': hand.cards,
+                          'handStr': str(hand),
                           'handVal': int(hand),
                           'score': score,
                           'bankRoll': seat['bankRoll'],
@@ -365,7 +374,8 @@ class GameState:
                               seat['agent'].name:
                               {
                                 'name': seat['name'],
-                                'hand': hand.cards[0],
+                                'agent': seat['agent'].name,
+                                'hand': [ hand.cards[0] ],
                                 'handStr': hand.dealerHand(),
                                 'handVal': Card.value(hand.cards[0]),
                                 'score': '',
@@ -377,6 +387,7 @@ class GameState:
                               seat['agent'].name:
                                 {
                                   'name': seat['name'],
+                                  'agent': seat['agent'].name,
                                   'handStr': str(hand),
                                   'hand': hand.cards,
                                   'handVal': int(hand),

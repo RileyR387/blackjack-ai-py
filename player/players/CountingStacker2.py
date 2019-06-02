@@ -11,7 +11,7 @@ class Agent:
     def __init__(self):
         self.disableAutoPlay = False
         self.newShoeFlag = False
-        self.name = "Counter"
+        self.name = "Counter2"
         self.splitEnabled = True
         self.defaultBet = 10
         self.lastBet = self.defaultBet
@@ -89,7 +89,7 @@ class Agent:
         hands = []
         for seat in gameState:
             for player,res in seat.items():
-                if player == 'player.players.CountingStacker':
+                if player == 'player.players.CountingStacker2':
                     hands.append( res )
         return hands
 
@@ -103,20 +103,14 @@ class Agent:
             (
                 myHand.value() < 18
              or
-                (myHand.value() in [18,20] and (dealer['handVal'] in [2,3,4,5,6] or dealer['handVal'] == 11) and self._getCount() > 6 )
-             or
-                (myHand.value() in [18,20] and (dealer['handVal'] in [2,3,4] and dealer['handVal'] != 11) and self._getCount() > 5 )
+                (myHand.value() in [18,20] and (dealer['handVal'] in [2,3,4] or dealer['handVal'] == 11) and self._getCount() > 5 )
             )
         ):
             print("%s: action: SPLIT" % self.name)
             self.riskLevel *= 2
             return 'SPLIT'
 
-        if(
-            (myHand.value() in [10,11] and myHand.canDouble() and self._getCount() > 6)
-            or
-            (self.riskLevel < self.maxRisk and myHand.value() in [10,11] and myHand.canDouble() and dealer['handVal'] < 7 and self._getCount() > 2)
-          ):
+        if self.riskLevel < self.maxRisk and myHand.value() in [10,11] and myHand.canDouble() and self._getCount() > 5:
             print("%s: action: DOUBLE" % self.name)
             self.riskLevel *= 2
             return 'DOUBLE'

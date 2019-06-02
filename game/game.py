@@ -40,6 +40,7 @@ class Game:
             except ShuffleShoeException as e:
                 print( "Last hand in shoe!" )
                 self.gameState.newShoeFlag = True
+                self.gameState.lastHandNotify()
                 card = self.shoe.nextCard()
 
             self.gameState.consumeCard( card )
