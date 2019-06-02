@@ -8,7 +8,7 @@ from pprint import pprint
 class Agent:
     def __init__(self):
         self.disableAutoPlay = False
-        self.name = "Stacker"
+        self.name = "Counter"
         self.splitEnabled = True
         self.defaultBet = 10
         self.lastBet = self.defaultBet
@@ -44,7 +44,7 @@ class Agent:
         hands = []
         for seat in gameState:
             for player,res in seat.items():
-                if player == 'player.players.SmartStacker':
+                if player == 'player.players.CountingStacker':
                     hands.append( res )
         return hands
 
