@@ -23,7 +23,11 @@ class DealerShoe:
         random.shuffle( self.shoe )
 
     def nextCard(self):
-        if len(self.shoe) > (.2*self.decks*52) or self.sentShuffleNotice:
+        if(
+          self.sentShuffleNotice or
+          (self.decks == 1 and len(self.shoe) > (self.decks*52*0.2) ) or
+          (self.decks != 1 and len(self.shoe) > 52)
+            ):
             return self.shoe.pop()
         else:
             self.sentShuffleNotice = True

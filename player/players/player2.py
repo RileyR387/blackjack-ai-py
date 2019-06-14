@@ -48,9 +48,7 @@ class Agent:
             self.shoeCount = 0
             self.lastBet = self.defaultBet
 
-
-        print("%s - Bet - Shoe Count: %s" % (self.name, self._getCount()))
-
+        print("%s - Bet(%s) - Shoe Count: %s" % (self.name, self.lastBet, self._getCount()))
         return self.lastBet
 
     def nextAction(self, gameStateJson, myHand):

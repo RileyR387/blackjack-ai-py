@@ -12,6 +12,9 @@ class Game:
         self.opts = opts
         self.players = players
 
+        if( len(self.players) > 4 and opts['decks'] == 1 ):
+            print("Too many players for 1 deck!!")
+
         self.gameState = GameState( opts['decks'], opts['insurance'], players )
         self.shoe  =  DealerShoe(opts['decks'])
 

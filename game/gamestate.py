@@ -208,7 +208,7 @@ class GameState:
             if thisHand.hasBusted() or thisHand.value() == 21:
                 thisHand.isFinal = True
         elif action in ['SPLIT']:
-            if thisHand.canSplit():
+            if not self.newShoeFlag and thisHand.canSplit():
                 player['stats']['splits'] += 1
                 player['bankRoll'] -= thisHand._bet
                 nextHand = thisHand.splitHand()
@@ -292,6 +292,7 @@ class GameState:
                 seat['roundsPlayed'] += 1
                 for hand in seat['hands']:
                     seat['handsPlayed'] += 1
+                    startBalance = seat['bankRoll'];
                     ##
                     # Blackjack
                     if( (hand.value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(hand.cards) == 2)
@@ -361,6 +362,7 @@ class GameState:
                           'hand': hand.cards,
                           'handStr': str(hand),
                           'handVal': int(hand),
+                          'amt': (seat['bankRoll'] - startBalance),
                           'score': score,
                           'bankRoll': seat['bankRoll'],
                         }
@@ -372,15 +374,16 @@ class GameState:
                         if seat['name'] in ['dealer','Dealer']:
                             game.append({
                               seat['agent'].name:
-                              {
-                                'name': seat['name'],
-                                'agent': seat['agent'].name,
-                                'hand': [ hand.cards[0] ],
-                                'handStr': hand.dealerHand(),
-                                'handVal': Card.value(hand.cards[0]),
-                                'score': '',
-                                'bankRoll': seat['bankRoll'],
-                              }
+                                {
+                                  'name': seat['name'],
+                                  'agent': seat['agent'].name,
+                                  'hand': [ hand.cards[0] ],
+                                  'handStr': hand.dealerHand(),
+                                  'handVal': Card.value(hand.cards[0]),
+                                  'score': '',
+                                  'amt': hand._bet,
+                                  'bankRoll': seat['bankRoll'],
+                                }
                             })
                         else:
                             game.append({
@@ -392,6 +395,7 @@ class GameState:
                                   'hand': hand.cards,
                                   'handVal': int(hand),
                                   'score': '',
+                                  'amt': hand._bet,
                                   'bankRoll': seat['bankRoll'],
                                 }
                             })
@@ -436,10 +440,10 @@ class GameState:
             for playerName, player in seat.items():
                 if player['name'] in ['dealer','Dealer']:
                     gameStringDealer = (color.BOLD + color.RED + "{bankRoll:10.2f} Name: {name:32s} Hand: " +
-                        color.PURPLE + "{handStr}" + color.END + "{score}" + color.END + color.END)
+                        "{handStr}" + color.END + "{score}" + color.END + color.END)
                     print( gameStringDealer.format_map( player ) )
                 else:
-                    gameString = color.iterable[(idx % len(color.iterable))] + "{bankRoll:10.2f} Name: {name:32s} Hand: {handStr}{score}" + color.END
+                    gameString = "" + color.iterable[(idx % len(color.iterable))] + "{bankRoll:10.2f} Name: {name:32s} Hand: {handStr}{score} {amt}" + color.END
                     print( gameString.format_map( player ) )
 
 
