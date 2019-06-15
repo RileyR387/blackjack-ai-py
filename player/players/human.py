@@ -1,10 +1,10 @@
 
 import json
-import game.card as Card
-from game.color import color
+import game.card  as Card
+from   game.color import color
 
 class Agent:
-    def __init__(self):
+    def __init__(self, opts):
         self.disableAutoPlay = True
         self.newShoeFlag = False
         self.name = "PartHuman"

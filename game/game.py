@@ -1,6 +1,7 @@
 
 import json
 import time
+import sys
 from pprint import pprint
 from .dealershoe import DealerShoe
 from .gamestate  import GameState
@@ -16,9 +17,8 @@ class Game:
         if( len(self.players) > 4 and opts['decks'] == 1 ):
             print("Too many players for 1 deck!!")
 
-        self.gameState = GameState( opts['decks'], opts['insurance'], opts['randomSeats'], players )
+        self.gameState = GameState( opts, players )
         self.shoe  =  DealerShoe(opts['decks'])
-
         print( "Game initialized" )
 
     def play(self):
@@ -34,6 +34,7 @@ class Game:
     def runShoe(self):
         self.shoe.dumpShoe()
         print( "Shoe running" )
+
         while self.gameState.status != "GAMEOVER":
             try:
                 card = self.shoe.nextCard()
@@ -50,5 +51,6 @@ class Game:
                     time.sleep( self.opts['rate'] )
                 self.gameState.printGameTable()
                 print()
-
+            elif self.opts['rate'] is not None:
+                time.sleep( self.opts['rate'] )
 

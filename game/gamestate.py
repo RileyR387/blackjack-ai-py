@@ -1,4 +1,6 @@
 
+import sys
+import time
 import random
 import json
 import pprint
@@ -8,19 +10,27 @@ import game.card as Card
 from .hand import Hand
 from .dealer import Dealer
 from .color import color
+from .consoleUI import ConsoleUI
 
 THREE_TO_TWO = 1.5
 TWO_TO_ONE = 2
 
 class GameState:
-    def __init__(self, deckCount, insurance, randomSeats, players):
+    def __init__(self, opts, players):
         self.seats = []
+        self.opts = opts
         self.players = players
         self._currPlayerIndex = -1
-        self._enableInsurance = insurance
+        self._enableInsurance = opts['insurance']
         self._MIN_BET = 5
         self.newShoeFlag = False
         self.priorGameStateJson = ''
+
+        self.agentOpts = {
+            'decks': opts['decks'],
+            'insurance': opts['insurance'],
+            'actions': ['N','S','H','D'],
+        }
 
         print( "Loading agents: \n%s" % json.dumps([ player for player in self.players.keys() ], sort_keys=True, indent=4 ) )
         for player in self.players.keys():
@@ -28,7 +38,7 @@ class GameState:
             self.seats.append({
                 'name': player,
                 'hands': [Hand()],
-                'agent': players[player].Agent(),
+                'agent': players[player].Agent(self.agentOpts),
                 'roundsPlayed': 0,
                 'handsPlayed': 0,
                 'bankRoll': 200,
@@ -43,7 +53,7 @@ class GameState:
                 },
             })
 
-        if randomSeats:
+        if opts['randomSeats']:
             random.shuffle(self.seats)
 
         self.status = "DEALING_HANDS"
@@ -66,18 +76,50 @@ class GameState:
             },
         })
         print("Created initial game state for %s players" % (len(self.seats)-1))
+        self.UI = None
+        if self.opts['urwidUI']:
+            self.UI = ConsoleUI()
+            self.UI.enable()
+
+    def _updateUI(self):
+        if not self.opts['urwidUI']:
+            return
+
+        if self.UI.enabled and not self.UI.running:
+            self.UI.start()
+
+        if self.UI.enabled and self.UI.running:
+            try:
+                self.UI.update( self.gameStateJson() )
+            except Exception as e:
+                sys.stderr.write( str(e) )
+                self.UI.terminate()
+
+    def _uiSuspend(self):
+        if self.UI is not None:
+            self.UI.disable()
+            self._updateUI()
+
+    def _uiResume(self):
+        if self.UI is not None:
+            self.UI.enable()
+            self._updateUI()
 
     def consumeCard(self, card):
-        #self.printBankrollsBets();
+        #self.printBankrollsBets()
+        self._updateUI()
+
         player = self.nextPlayer()
         if self.status == "DEALING_HANDS":
             if self._dealHand( player, card ) is not None:
                 self.status = 'DELT'
                 pass
             else:
+                self._updateUI()
                 return
 
         if self.status == "DELT":
+            self._updateUI()
             if self._queryPlayers( player, card) is not None:
                 self.status = 'SCORE'
                 pass
@@ -86,20 +128,25 @@ class GameState:
 
         if self.status == "SCORE":
             self.printGameTable()
+            self._updateUI()
             #input()
             if self._clearRound():
                 self.consumeCard( card )
                 return
             else:
+                self._updateUI()
                 print("Game over!")
                 self.status = 'GAMEOVER'
+                if self.opts['urwidUI']:
+                    self.UI.terminate()
                 return
 
 
     def printBankrollsBets(self):
         for player in self.seats:
             for hand in player['hands']:
-                print("player %s bankroll %s bet %s" % (player['name'], player['bankRoll'], hand._bet) )
+                #print("player %s bankroll %s bet %s" % (player['name'], player['bankRoll'], hand._bet) )
+                pass
 
     def _clearRound(self):
         self.priorGameStateJson = self.gameStateJson()
@@ -117,12 +164,15 @@ class GameState:
             for hand in player['hands']:
                 if player['name'] not in ['Dealer','dealer']:
                     try:
+                        self._uiSuspend()
                         hand._bet = player['agent'].placeBet( self.priorGameStateJson )
+                        self._uiResume()
                         player['bankRoll'] -= hand._bet
                     except Exception as e:
-                        print( "%s failed to placeBet(), using minimums of %s"%( player['name'], self._MIN_BET))
+                        #print( "%s failed to placeBet(), using minimums of %s"%( player['name'], self._MIN_BET))
                         hand._bet = self._MIN_BET
                         player['bankRoll'] -= hand._bet
+                        self._uiResume()
 
     def lastHandNotify(self):
         for player in self.seats:
@@ -131,7 +181,8 @@ class GameState:
                     try:
                         player['agent'].notifyNewShoe()
                     except Exception as e:
-                        print( "%s missing notifyNewShoe()" % player['name'])
+                        #print( "%s missing notifyNewShoe()" % player['name'])
+                        pass
 
     def _queryPlayers( self, player, card):
          action = None
@@ -148,7 +199,7 @@ class GameState:
                  return
              else:
                  dealerHand.isFinal = True
-                 print("STATE CHANGE -> SCORE")
+                 #print("STATE CHANGE -> SCORE")
                  self.status = "SCORE"
                  return 'SCORE'
          else:
@@ -160,8 +211,10 @@ class GameState:
                 thisHand.addCard( card )
                 return
 
+            self._uiSuspend()
             action = player['agent'].nextAction( self.gameStateJson(), thisHand )
             self._handleAction( player, card, thisHand, action )
+            self._uiResume()
 
     def _roundCanStart(self, player, card):
         if( self._currPlayerIndex == 0
@@ -179,7 +232,7 @@ class GameState:
                     except Exception as e:
                         pass
                 if dealerHand.isBlackjack():
-                    print("Dealer Blackjacked!")
+                    #print("Dealer Blackjacked!")
                     self.status = "SCORE"
                     return False
                 else:
@@ -298,7 +351,7 @@ class GameState:
                 seat['roundsPlayed'] += 1
                 for hand in seat['hands']:
                     seat['handsPlayed'] += 1
-                    startBalance = seat['bankRoll'];
+                    startBalance = seat['bankRoll']
                     ##
                     # Blackjack
                     if( (hand.value() == 21 and (dealer.value() != 21 or seat['name'] == 'dealer') and len(hand.cards) == 2)
@@ -406,7 +459,7 @@ class GameState:
                                 }
                             })
 
-        return game;
+        return game
 
     def playersRemain(self):
         for seat in self.seats:
@@ -427,7 +480,7 @@ class GameState:
 
     def statsJson(self):
         statsArray = []
-        statsStr = '';
+        statsStr = ''
         for idx, player in enumerate(self.seats):
             statsArray.append(
                 json.dumps( {

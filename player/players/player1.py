@@ -1,6 +1,6 @@
 
 class Agent:
-    def __init__(self):
+    def __init__(self, opts):
         self.name = "playerOne"
 
     def placeBet(self, gameStateJson):

@@ -6,7 +6,7 @@ from game.score import score
 from pprint import pprint
 
 class Agent:
-    def __init__(self):
+    def __init__(self, opts):
         self.disableAutoPlay = False
         self.name = "Stacker"
         self.splitEnabled = True

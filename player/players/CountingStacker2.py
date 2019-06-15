@@ -8,7 +8,7 @@ import game.card as Card
 from pprint import pprint
 
 class Agent:
-    def __init__(self):
+    def __init__(self, opts):
         self.disableAutoPlay = False
         self.newShoeFlag = False
         self.name = "CountingStacker2"
