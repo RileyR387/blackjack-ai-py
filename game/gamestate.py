@@ -13,7 +13,7 @@ THREE_TO_TWO = 1.5
 TWO_TO_ONE = 2
 
 class GameState:
-    def __init__(self, deckCount, insurance, players):
+    def __init__(self, deckCount, insurance, randomSeats, players):
         self.seats = []
         self.players = players
         self._currPlayerIndex = -1
@@ -22,6 +22,7 @@ class GameState:
         self.newShoeFlag = False
         self.priorGameStateJson = ''
 
+        print( "Loading agents: \n%s" % json.dumps([ player for player in self.players.keys() ], sort_keys=True, indent=4 ) )
         for player in self.players.keys():
             print( "Loaded %s" % player )
             self.seats.append({
@@ -30,7 +31,7 @@ class GameState:
                 'agent': players[player].Agent(),
                 'roundsPlayed': 0,
                 'handsPlayed': 0,
-                'bankRoll': 1000,
+                'bankRoll': 200,
                 'stats': {
                    'bjs': 0,
                    'wins': 0,
@@ -42,7 +43,8 @@ class GameState:
                 },
             })
 
-        random.shuffle(self.seats)
+        if randomSeats:
+            random.shuffle(self.seats)
 
         self.status = "DEALING_HANDS"
 
@@ -154,6 +156,10 @@ class GameState:
             if thisHand is None:
                 self.consumeCard( card )
                 return
+            if len(thisHand.cards) < 2:
+                thisHand.addCard( card )
+                return
+
             action = player['agent'].nextAction( self.gameStateJson(), thisHand )
             self._handleAction( player, card, thisHand, action )
 
