@@ -42,7 +42,7 @@ class Agent:
             self.lastBet = self.defaultBet
 
         print("%s - RemDecks:  %s" % (self.name, self._decksRemaining()))
-        print("%s - delt: %s/%s cards(%2.2f%%)" % (
+        print("%s - delt: %s/%s cards (%2.2f%%)" % (
             self.name, self._cardCount(), self.gameDecks*52, 100*(self._cardCount()/(self.gameDecks*52)) ) )
         print("%s - CardCount: %s" % (self.name, self._getCount()))
         print("%s - TrueCount: %s" % (self.name, self._trueCount()))

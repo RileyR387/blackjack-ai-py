@@ -11,7 +11,7 @@ class Agent:
     def __init__(self, opts):
         self.disableAutoPlay = False
         self.newShoeFlag = False
-        self.name = "CountingStacker3"
+        self.name = "KayOh"
         self.splitEnabled = True
         self.defaultBet = 10
         self.lastBet = self.defaultBet
@@ -34,7 +34,7 @@ class Agent:
                     self.currCardCount += 1
                     if Card.value(card) in [10,11]:
                         self.currHandCount -= 1
-                    elif Card.value(card) not in [7,8,9]:
+                    elif Card.value(card) not in [8,9]:
                         self.currHandCount += 1
 
     def notifyNewShoe(self):
@@ -106,7 +106,7 @@ class Agent:
         hands = []
         for seat in gameState:
             for player,res in seat.items():
-                if player == 'player.players.CountingStacker3':
+                if player == 'player.players.KayOh':
                     hands.append( res )
         return hands
 

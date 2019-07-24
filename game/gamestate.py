@@ -10,7 +10,6 @@ import game.card as Card
 from .hand import Hand
 from .dealer import Dealer
 from .color import color
-from .consoleUI import ConsoleUI
 
 THREE_TO_TWO = 1.5
 TWO_TO_ONE = 2
@@ -76,38 +75,9 @@ class GameState:
             },
         })
         print("Created initial game state for %s players" % (len(self.seats)-1))
-        self.UI = None
-        if self.opts['urwidUI']:
-            self.UI = ConsoleUI()
-            self.UI.enable()
-
-    def _updateUI(self):
-        if not self.opts['urwidUI']:
-            return
-
-        if self.UI.enabled and not self.UI.running:
-            self.UI.start()
-
-        if self.UI.enabled and self.UI.running:
-            try:
-                self.UI.update( self.gameStateJson() )
-            except Exception as e:
-                sys.stderr.write( str(e) )
-                self.UI.terminate()
-
-    def _uiSuspend(self):
-        if self.UI is not None:
-            self.UI.disable()
-            self._updateUI()
-
-    def _uiResume(self):
-        if self.UI is not None:
-            self.UI.enable()
-            self._updateUI()
 
     def consumeCard(self, card):
         #self.printBankrollsBets()
-        self._updateUI()
 
         player = self.nextPlayer()
         if self.status == "DEALING_HANDS":
@@ -115,11 +85,9 @@ class GameState:
                 self.status = 'DELT'
                 pass
             else:
-                self._updateUI()
                 return
 
         if self.status == "DELT":
-            self._updateUI()
             if self._queryPlayers( player, card) is not None:
                 self.status = 'SCORE'
                 pass
@@ -128,19 +96,13 @@ class GameState:
 
         if self.status == "SCORE":
             self.printGameTable()
-            self._updateUI()
             #input()
             if self._clearRound():
                 self.consumeCard( card )
                 return
             else:
-                self._updateUI()
                 print("Game over!")
                 self.status = 'GAMEOVER'
-                if self.opts['urwidUI']:
-                    self.UI.terminate()
-                return
-
 
     def printBankrollsBets(self):
         for player in self.seats:
@@ -164,15 +126,12 @@ class GameState:
             for hand in player['hands']:
                 if player['name'] not in ['Dealer','dealer']:
                     try:
-                        self._uiSuspend()
                         hand._bet = player['agent'].placeBet( self.priorGameStateJson )
-                        self._uiResume()
                         player['bankRoll'] -= hand._bet
                     except Exception as e:
                         #print( "%s failed to placeBet(), using minimums of %s"%( player['name'], self._MIN_BET))
                         hand._bet = self._MIN_BET
                         player['bankRoll'] -= hand._bet
-                        self._uiResume()
 
     def lastHandNotify(self):
         for player in self.seats:
@@ -211,10 +170,8 @@ class GameState:
                 thisHand.addCard( card )
                 return
 
-            self._uiSuspend()
             action = player['agent'].nextAction( self.gameStateJson(), thisHand )
             self._handleAction( player, card, thisHand, action )
-            self._uiResume()
 
     def _roundCanStart(self, player, card):
         if( self._currPlayerIndex == 0
@@ -485,7 +442,6 @@ class GameState:
             statsArray.append(
                 json.dumps( {
                   'name': player['name'],
-                  'seat': idx,
                   'roundsPlayed': player['roundsPlayed'],
                   'handsPlayed': player['handsPlayed'],
                   'bankRoll': player['bankRoll'],
@@ -493,6 +449,25 @@ class GameState:
                 }, sort_keys=True, indent=4 )
             )
         return '[' + ',\n'.join(statsArray) + "]\n"
+
+    def printStats(self):
+        frmtStr = "{:<32} {:>5} {:>5} {:>12} {:>5} {:>5} {:>5} {:>5} {:>5} {:>5} {:>5}"
+        print( frmtStr.format(
+            'Name','Rnds','Hnds','Bank','BJ','bust','DUB','SPLIT','LOSS','PUSH','W')
+        )
+        for idx, player in enumerate(self.seats):
+            print( frmtStr.format(
+                player['name'], player['roundsPlayed'],player['handsPlayed'],player['bankRoll'],
+                    player['stats']['bjs'],
+                    player['stats']['busts'],
+                    player['stats']['doubles'],
+                    player['stats']['splits'],
+                    player['stats']['loses'],
+                    player['stats']['pushes'],
+                    player['stats']['wins']
+                )
+            )
+
 
     def printGameTable(self):
         for idx, seat in enumerate(self.gameState()):

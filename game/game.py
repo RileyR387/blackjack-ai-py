@@ -29,7 +29,8 @@ class Game:
                 self.gameState.newShoeFlag = False
                 self.gameState.status = 'DEALING_HANDS'
             self.runShoe()
-            print( self.gameState.statsJson() )
+            #print( self.gameState.statsJson() )
+            self.gameState.printStats()
 
     def runShoe(self):
         self.shoe.dumpShoe()

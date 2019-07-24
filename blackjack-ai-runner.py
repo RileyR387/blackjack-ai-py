@@ -31,10 +31,6 @@ opts.add_argument('-z','--randomSeatOrder',
     action='store_true',
     help='Randomize table seats at start of run.')
 
-opts.add_argument('-u','--urwidUI',
-    action='store_true',
-    help='Enable Urwid, pythons console UI library')
-
 opts.add_argument('-v','--verbose',
     action='store_true',
     help='Print table as each card is delt')
@@ -72,7 +68,6 @@ game_opts = {
     'randomSeats': args.randomSeatOrder or False,
     'hitSoft17': True,
     'insurance': True,
-    'urwidUI': args.urwidUI or False,
     'verbose': args.verbose or False,
 }
 

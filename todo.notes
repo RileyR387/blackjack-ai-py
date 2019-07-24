@@ -1,0 +1,9 @@
+
+## Generally, agents are "copied, pasted, manipulated" at this point in time (aka kinda junky/buggy)
+
+* Using the following command:
+ - `./blackjack-ai-runner.py -d 8 -a CountingStacker human UpPullCounter KayOh SmartStacker`
+  # Saw a player get paid on push....
+  # Saw some super erratic/inaccurate betting from CountingStacker and UpPullCounter
+
+

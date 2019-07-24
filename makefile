@@ -11,19 +11,17 @@ test:
 
 run:
 	./venv/bin/python blackjack-ai-runner.py \
-		--agents CountingStacker2 CountingStacker3 player1 CountingStacker SmartStacker
+		--decks 6 \
+		--shoes 300 \
+		--agents CountingStacker3 KayOh SmartStacker UpPull CountingStacker2
 
 play:
 	./venv/bin/python blackjack-ai-runner.py \
-		--rate 0.2 \
+		--rate 0.6 \
 		--decks 6 \
 		--shoes 3 \
 		--verbose \
-		--agents human CountingStacker2 CountingStacker3 CountingStacker SmartStacker
-
-curses:
-	./venv/bin/python blackjack-ai-runner.py \
-		 -u --rate 0.1 -d 2 -s 1 --agents CountingStacker2 CountingStacker3 CountingStacker SmartStacker
+		--agents human CountingStacker3 KayOh SmartStacker UpPull
 
 update_deps:
 	./venv/bin/pipreqs ./
