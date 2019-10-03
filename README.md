@@ -1,7 +1,7 @@
 
-# BlackJack with "pluggable" AI agents you can practice againsts.
+## Terminal based BlackJack AI
 
-Limiting documentation to limit homework cheating.
+Limiting documentation to limit homework/project cheating.
 
 Just need python3 pretty much... `./blackjack-ai-runner.py --help`
 
